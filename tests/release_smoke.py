@@ -97,8 +97,11 @@ def main():
                     page.get_by_label("Title", exact=True).fill("Release persistence check")
                     page.get_by_label("Project key", exact=True).fill("REL")
                     page.get_by_role("button", name="Save project", exact=True).click()
+                    expect(page.get_by_role("dialog")).to_have_count(0)
                     expect(page.locator(".project-card")).to_have_count(1)
-                    expect(page.get_by_text("Still a Dream", exact=True)).to_be_visible()
+                    expect(
+                        page.locator(".project-card").get_by_text("Still a Dream", exact=True)
+                    ).to_be_visible()
                     page.get_by_role("button", name="Dark", exact=True).click()
                     expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
                     # Verify the preference write completed before terminating the process.
