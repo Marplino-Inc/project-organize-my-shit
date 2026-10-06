@@ -3,7 +3,7 @@
 import json
 import re
 import sqlite3
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
@@ -248,6 +248,8 @@ def save(path, fields, item_id=None, revision=None, actor="You"):
             raise ValueError("This item changed in another window. Close and reopen it before saving.")
         stamp = now()
         if existing:
+            if "project_key" in fields and fields["project_key"] != existing["project_key"]:
+                raise ValueError("Project keys cannot change on update.")
             fixed = {key: existing[key] for key in ("id", "project_key", "number", "created_at")}
             item = {**existing, **fields, **fixed, "updated_at": stamp, "revision": revision + 1}
             if fields.get("kind", existing["kind"]) == "Project" and existing["kind"] != "Project":
@@ -410,5 +412,7 @@ def import_snapshot(path, raw, new_key=None):
 
 
 def backup(path, destination):
-    with connect(path) as source, sqlite3.connect(destination) as target:
+    if Path(path).resolve() == Path(destination).resolve():
+        raise ValueError("Choose a backup destination different from the working database.")
+    with closing(connect(path)) as source, closing(sqlite3.connect(destination)) as target:
         source.backup(target)

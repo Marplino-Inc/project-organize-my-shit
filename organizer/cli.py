@@ -56,6 +56,8 @@ def main(argv=None):
             items, _ = store.load(args.db)
 
             def resolve(key):
+                if not isinstance(key, str) or not key.strip():
+                    raise ValueError("Item references must be a ticket label or UUID string.")
                 found = next((x for x in items if store.ticket(x) == key.upper() or x["id"] == key), None)
                 if not found:
                     raise ValueError(f"Item not found: {key}")

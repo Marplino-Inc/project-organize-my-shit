@@ -199,3 +199,32 @@ def test_tags_normalized_and_ids_stable(workspace):
     updated = store.save(path, {"status": "Done"}, item["id"], item["revision"])
     assert store.ticket(item) == store.ticket(updated)
     assert child(path, root)["number"] == 3
+
+
+def test_project_key_change_is_rejected_by_shared_store(workspace):
+    path, root = workspace
+    with pytest.raises(ValueError, match="cannot change"):
+        store.save(path, {"project_key": "CHANGED"}, root["id"], root["revision"])
+    assert store.load(path)[0][0]["project_key"] == "TEST"
+
+
+@pytest.mark.parametrize("parent", [123, ["TEST-0001"], {"ticket": "TEST-0001"}])
+def test_cli_invalid_parent_returns_json_error(workspace, tmp_path, capsys, parent):
+    path, _ = workspace
+    payload = tmp_path / "invalid.json"
+    payload.write_text(
+        json.dumps({"kind": "Task", "project_key": "TEST", "title": "Invalid", "parent_id": parent}),
+        encoding="utf-8",
+    )
+    assert cli(["--db", str(path), "create", "--file", str(payload)]) == 1
+    result = json.loads(capsys.readouterr().out)
+    assert not result["ok"]
+    assert "references" in result["error"]
+    assert len(store.load(path)[0]) == 1
+
+
+def test_backup_rejects_working_database_as_destination(workspace):
+    path, _ = workspace
+    with pytest.raises(ValueError, match="different"):
+        store.backup(path, path)
+    assert len(store.load(path)[0]) == 1

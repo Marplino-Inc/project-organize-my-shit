@@ -8,6 +8,9 @@ No account, cloud database, or remote service is required.
 
 ## Run on Windows
 
+For the release download, extract the Windows source ZIP and double-click **Start.cmd**.
+This starts the same local application as the PowerShell commands below; it requires uv.
+
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/), clone this repository,
 and run these PowerShell commands from the checkout:
 
@@ -19,14 +22,14 @@ uv run --no-dev python main.py
 The browser opens automatically. Keep the terminal running; press **Ctrl+C** there to stop.
 The first installation requires internet access. Normal operation uses bundled local assets.
 
-Or run `./Start.ps1`. For a separate sample workspace, run `./Start.ps1 -Demo` or:
+Or run `./Start.ps1`. For a separate sample workspace on port 8766, run `./Start.ps1 -Demo` or:
 
 ```powershell
 uv run --no-dev python main.py --demo --port 8766
 ```
 
-Demo edits persist separately from your own projects. This is an early source-based application,
-not yet a packaged Windows installer.
+Demo edits persist separately from your own projects. This is a source-based application,
+not a standalone executable or signed Windows installer. See the [v0.1.0 release notes](docs/releases/v0.1.0.md).
 
 ## What is included
 
