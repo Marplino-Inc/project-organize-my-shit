@@ -59,3 +59,22 @@ These are inspirations and framework capabilities, not claims of formal project-
 - [SQLite intended uses](https://sqlite.org/whentouse.html) — embedded local storage and portable snapshots.
 
 No Jira or Trello code or assets are bundled.
+
+## v0.2.0 tags and palette library
+
+Project roots hold a default tag map; each item holds only its local pairs/overrides. Reads merge these
+maps without duplicating defaults into every child. Null is a value; absence means inherit. Copying a
+project's set creates independent defaults. Tags shown in filters, dashboards and reports use the merged
+view. Database version 4 adds defaults and migrates old labels after a consistent pre-upgrade backup.
+
+`themes.py` defines semantic interface tokens and five decorative category slots for each palette.
+The existing color identity of a project remains stable while its hex accents follow the selected family.
+Status labels keep their meaning. Family and light/dark/system preferences are independent. Fonts remain
+the existing local system stack; no web font or new frontend dependency is added.
+
+Palette references: [bslib theming](https://rstudio.github.io/bslib/articles/theming/index.html),
+[ggplot2 viridis](https://ggplot2.tidyverse.org/reference/scale_viridis.html),
+[ggplot2 ColorBrewer](https://ggplot2.tidyverse.org/reference/scale_brewer.html), and
+[Google Material color roles](https://m3.material.io/styles/color/roles).
+These are adapted UI colors, not full library themes or claims of Material certification. Chart palette
+properties do not establish UI contrast; foreground/background pairs and rendered cards are checked separately.

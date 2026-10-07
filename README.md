@@ -29,12 +29,12 @@ uv run --no-dev python main.py --demo --port 8766
 ```
 
 Demo edits persist separately from your own projects. This is a source-based application,
-not a standalone executable or signed Windows installer. See the [v0.1.0 release notes](docs/releases/v0.1.0.md).
+not a standalone executable or signed Windows installer. See the [v0.2.0 release notes](docs/releases/v0.2.0.md).
 
 ## What is included
 
-- Light, dark, and system appearance, remembered between launches.
-- Project colors and named tags, with compact cards and expandable details.
+- Five palettes, each with light, dark, and system appearance, remembered between launches.
+- Project colors and name/value tags, with compact cards and expandable details.
 - Projects → major goals → minor goals → tasks → subtasks, with optional skipped levels.
 - Ideas that do not count toward committed completion totals.
 - Stable IDs such as `APP-0001`, including an ID for the project itself.
@@ -55,6 +55,28 @@ Projects have an explicit lifecycle: finishing their tasks does **not** automati
 Completed. Completion totals count only the lowest-level committed work once, excluding ideas,
 cancelled items, and descendants of cancelled parents. An undivided goal counts as one work item.
 Effort is an ordered estimate, not hours or a percentage weight.
+
+## Tags and themes
+
+Edit a project to define its **Project tag defaults**. Every default has a name and a value, or an
+explicit **Null** selection. Defaults appear on the project and every work item, including existing
+items. Work items can **Override** a default; turn Override off to follow the project again.
+Changing a project default updates all items that inherit it. Add extra item-specific pairs with
+**Add tag**. **Copy defaults from project → Copy set** reuses another project's set; later edits to
+the source set do not change the copy. Filters and dashboard tag groups use the effective name/value pair.
+
+Use **Palette** beside Light / Dark / System to switch between **Organize, Shiny Mint, Viridis,
+Brewer Garden, and Material Blue**. Preferences shows their swatches and sources. All assets remain
+local. These are adaptations of the cited palette families, not exact copies of their UI frameworks.
+
+### Upgrading from 0.1.0
+
+Stop the old app before starting the updated version. On first use, the app creates a sibling
+`*.pre-v0.2.0-*.db` backup before migrating the database. Old project tags become null-valued project
+defaults; old work-item tags become null-valued local tags. Titles, IDs, descriptions, links, preferences,
+and activity are retained. Do not open the migrated database with 0.1.0; use the pre-upgrade backup to
+roll back. New exports use snapshot version 2; old version 1 snapshots still import. Agent payloads now
+use objects instead of tag arrays; see the [version 2 contract](docs/agent-interface.md).
 
 ## Local data and sharing
 

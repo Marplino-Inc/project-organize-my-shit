@@ -2,7 +2,7 @@
 
 from html import escape
 
-from .store import EFFORT, now, progress, ticket
+from .store import EFFORT, effective_tags, now, progress, tag_text, ticket
 
 
 def html_report(items, effort_scale="T-shirt"):
@@ -24,7 +24,7 @@ def html_report(items, effort_scale="T-shirt"):
             <h2>{esc(item["title"])}</h2><p>{esc(item["status"])} · Effort: {effort}</p>
             <p class="description">{esc(item["description"])}</p>
             {('<p>Repository: <a href="' + esc(item["repository_url"]) + '">' + esc(item["repository_url"]) + "</a></p>") if item["repository_url"] else ""}
-            <p>{" · ".join(esc(tag) for tag in item["tags"])}</p>
+            <p>{" · ".join(esc(tag_text(name, value)) for name, value in effective_tags(item, items).items())}</p>
             {("<p>Blocked: " + esc(item["blocked"]) + "</p>") if item["blocked"] else ""}</article>""")
     return f"""<!doctype html><html lang="en"><meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">

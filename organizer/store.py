@@ -10,7 +10,7 @@ from typing import Literal
 from urllib.parse import urlparse
 from uuid import uuid4
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 STATUSES = ("Backlog", "Ready", "In progress", "Done", "Cancelled")
 PROJECT_STATUSES = ("Still a Dream", "Just Designing", "In Progress", "On Hold", "Completed", "Cancelled")
@@ -42,13 +42,31 @@ class Item(BaseModel):
         "Completed",
     ] = "Backlog"
     effort: int | None = Field(default=None, ge=1, le=5)
-    tags: list[str] = Field(default_factory=list, max_length=30)
+    tags: dict[str, str | None] = Field(default_factory=dict, max_length=30)
+    tag_defaults: dict[str, str | None] = Field(default_factory=dict, max_length=30)
     color: Literal["Violet", "Teal", "Amber", "Coral", "Blue"] = "Violet"
     blocked: str = Field(default="", max_length=1000)
     repository_url: str = Field(default="", max_length=2000)
     created_at: str
     updated_at: str
     revision: int = Field(default=1, ge=1)
+
+    @field_validator("tags", "tag_defaults")
+    @classmethod
+    def valid_tags(cls, tags):
+        normalized = {}
+        for name, value in tags.items():
+            name = name.strip().casefold()
+            if not name or len(name) > 40:
+                raise ValueError("Tag names need 1–40 characters.")
+            if name in normalized:
+                raise ValueError(f"Duplicate tag name: {name}")
+            if value is not None:
+                value = value.strip()
+                if not value or len(value) > 200:
+                    raise ValueError("Enter a tag value (1–200 characters), or explicitly select null.")
+            normalized[name] = value
+        return normalized
 
 
 class Link(BaseModel):
@@ -61,7 +79,7 @@ class Link(BaseModel):
 class Snapshot(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     format: Literal["organize-snapshot"] = "organize-snapshot"
-    version: Literal[1] = 1
+    version: Literal[2] = 2
     exported_at: str
     items: list[Item] = Field(max_length=10000)
     links: list[Link] = Field(max_length=30000)
@@ -101,8 +119,12 @@ def initialize(path):
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with transaction(path) as db:
         version = db.execute("PRAGMA user_version").fetchone()[0]
-        if version > 3:
+        if version > 4:
             raise ValueError("This database needs a newer version of Organize.")
+        if 0 < version < 4:
+            # Reserve writes while a second read connection makes the pre-migration backup.
+            destination = Path(path).with_name(f"{Path(path).stem}.pre-v0.2.0-{uuid4().hex[:8]}.db")
+            backup(path, destination)
         db.execute("""CREATE TABLE IF NOT EXISTS items (
             id TEXT PRIMARY KEY, project_key TEXT NOT NULL, number INTEGER NOT NULL,
             parent_id TEXT REFERENCES items(id), kind TEXT NOT NULL, title TEXT NOT NULL,
@@ -110,6 +132,7 @@ def initialize(path):
             tags TEXT NOT NULL, color TEXT NOT NULL, blocked TEXT NOT NULL,
             created_at TEXT NOT NULL, updated_at TEXT NOT NULL, revision INTEGER NOT NULL,
             repository_url TEXT NOT NULL DEFAULT '',
+            tag_defaults TEXT NOT NULL DEFAULT '{}',
             UNIQUE(project_key, number))""")
         db.execute("CREATE INDEX IF NOT EXISTS items_parent ON items(parent_id)")
         db.execute("""CREATE TABLE IF NOT EXISTS links (
@@ -129,19 +152,50 @@ def initialize(path):
                 ("Done", "Completed"),
             ):
                 db.execute("UPDATE items SET status=? WHERE kind='Project' AND status=?", (after, before))
-        db.execute("PRAGMA user_version=3")
+        if 0 < version < 4:
+            db.execute("ALTER TABLE items ADD COLUMN tag_defaults TEXT NOT NULL DEFAULT '{}'")
+            for row in db.execute("SELECT id, kind, tags FROM items").fetchall():
+                old = json.loads(row["tags"])
+                pairs = {name.strip().casefold(): None for name in old} if isinstance(old, list) else old
+                local, defaults = ({}, pairs) if row["kind"] == "Project" else (pairs, {})
+                db.execute(
+                    "UPDATE items SET tags=?, tag_defaults=? WHERE id=?",
+                    (json.dumps(local), json.dumps(defaults), row["id"]),
+                )
+        db.execute("PRAGMA user_version=4")
 
 
 def read_items(db):
     items = [dict(row) for row in db.execute("SELECT * FROM items ORDER BY project_key, number")]
     for item in items:
         item["tags"] = json.loads(item["tags"])
+        item["tag_defaults"] = json.loads(item["tag_defaults"])
     return items
 
 
 def load(path):
     with transaction(path) as db:
         return read_items(db), [dict(row) for row in db.execute("SELECT * FROM links")]
+
+
+def effective_tags(item, items):
+    root = next(
+        (x for x in items if x["kind"] == "Project" and x["project_key"] == item["project_key"]), None
+    )
+    return {**(root["tag_defaults"] if root else {}), **item["tags"]}
+
+
+def tag_text(name, value):
+    return f"{name}: {'(null)' if value is None else value}"
+
+
+def tag_options(items, all_items=None):
+    pairs = {
+        json.dumps([name, value]): tag_text(name, value)
+        for item in items
+        for name, value in effective_tags(item, all_items or items).items()
+    }
+    return dict(sorted(pairs.items(), key=lambda entry: entry[1].casefold()))
 
 
 def setting(path, key, default=None):
@@ -178,8 +232,8 @@ def validate_graph(items, links):
                 or url.password
             ):
                 raise ValueError("Repository links must be HTTPS URLs without credentials, on projects only.")
-        if any(not tag.strip() or len(tag) > 40 for tag in item["tags"]):
-            raise ValueError("Tags must contain 1–40 characters.")
+        if item["kind"] != "Project" and item["tag_defaults"]:
+            raise ValueError("Only projects can define default tags.")
         key = (item["project_key"], item["number"])
         if key in keys:
             raise ValueError("Duplicate ticket numbers in a project.")
@@ -216,7 +270,7 @@ def validate_graph(items, links):
 
 
 def write_item(db, item):
-    row = {**item, "tags": json.dumps(item["tags"])}
+    row = {**item, "tags": json.dumps(item["tags"]), "tag_defaults": json.dumps(item["tag_defaults"])}
     columns = ",".join(row)
     markers = ",".join("?" for _ in row)
     # Only validated Item fields become column names. Values are always parameters.
@@ -233,6 +287,7 @@ def save(path, fields, item_id=None, revision=None, actor="You"):
         "status",
         "effort",
         "tags",
+        "tag_defaults",
         "color",
         "blocked",
         "repository_url",
@@ -278,12 +333,11 @@ def save(path, fields, item_id=None, revision=None, actor="You"):
             ).model_dump()
         item = Item.model_validate(item).model_dump()
         item["title"] = item["title"].strip()
-        item["tags"] = list(dict.fromkeys(tag.strip().lower() for tag in item["tags"] if tag.strip()))
         combined = [x for x in items if x["id"] != item["id"]] + [item]
         links = [dict(row) for row in db.execute("SELECT * FROM links")]
         validate_graph(combined, links)
         if existing:
-            row = {**item, "tags": json.dumps(item["tags"])}
+            row = {**item, "tags": json.dumps(item["tags"]), "tag_defaults": json.dumps(item["tag_defaults"])}
             db.execute(
                 "UPDATE items SET " + ",".join(f"{k}=?" for k in row) + " WHERE id=?",
                 (*row.values(), item["id"]),
@@ -366,7 +420,21 @@ def export_snapshot(path, project_key=None):
 def parse_snapshot(raw):
     if len(raw) > 10_000_000:
         raise ValueError("Snapshot exceeds the 10 MB limit.")
-    snapshot = Snapshot.model_validate_json(raw)
+    payload = json.loads(raw)
+    if isinstance(payload, dict) and payload.get("version") == 1:
+        if not isinstance(payload.get("items"), list):
+            raise ValueError("Legacy snapshot items must be a list.")
+        for item in payload.get("items", []):
+            if not isinstance(item, dict) or not isinstance(item.get("tags", []), list):
+                raise ValueError("Invalid legacy snapshot item.")
+            old_tags = item.get("tags", [])
+            if not all(isinstance(name, str) for name in old_tags):
+                raise ValueError("Legacy tags must be strings.")
+            pairs = {name.strip().casefold(): None for name in old_tags}
+            item["tags"] = {} if item.get("kind") == "Project" else pairs
+            item["tag_defaults"] = pairs if item.get("kind") == "Project" else {}
+        payload["version"] = 2
+    snapshot = Snapshot.model_validate(payload)
     if not snapshot.items:
         raise ValueError("The snapshot contains no projects.")
     validate_graph([x.model_dump() for x in snapshot.items], [x.model_dump() for x in snapshot.links])

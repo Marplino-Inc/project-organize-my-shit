@@ -104,6 +104,11 @@ def main():
                     ).to_be_visible()
                     page.get_by_role("button", name="Dark", exact=True).click()
                     expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
+                    page.get_by_label("Palette", exact=True).click()
+                    page.get_by_role("option", name="Shiny Mint", exact=True).click()
+                    page.wait_for_function(
+                        "getComputedStyle(document.body).getPropertyValue('--canvas').trim() === '#19231f'"
+                    )
                     # Verify the preference write completed before terminating the process.
                     page.reload()
                     expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
@@ -112,6 +117,7 @@ def main():
                     process = start()
                     page = browser.new_page()
                     page.goto(url)
+                    expect(page.get_by_label("Palette", exact=True)).to_have_value("Shiny Mint")
                     expect(
                         page.locator(".project-card").get_by_role(
                             "button", name="Release persistence check", exact=True

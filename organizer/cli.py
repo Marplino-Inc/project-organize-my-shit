@@ -45,11 +45,12 @@ def main(argv=None):
         if args.command == "schema":
             result = {
                 "schema": store.Item.model_json_schema(),
-                "read_only": ["id", "number", "created_at", "updated_at", "revision"],
+                "read_only": ["id", "number", "created_at", "updated_at", "revision", "effective_tags"],
+                "tag_semantics": "tags stores local overrides; tag_defaults is project-only; effective_tags is computed. Replace the whole map when updating. Remove a local key to resume inheritance; null is an explicit value.",
                 "immutable_on_update": ["project_key"],
                 "project_statuses": store.PROJECT_STATUSES,
                 "work_statuses": store.STATUSES,
-                "api_version": 1,
+                "api_version": 2,
             }
         else:
             store.initialize(args.db)
@@ -106,6 +107,13 @@ def main(argv=None):
                 result = {"exported": str(args.out)}
             else:
                 result = {"imported": store.import_snapshot(args.db, args.file.read_bytes(), args.new_key)}
+        if args.command in ("projects", "items", "get", "create", "update"):
+            current, _ = store.load(args.db)
+
+            def present(item):
+                return {**item, "effective_tags": store.effective_tags(item, current)}
+
+            result = [present(x) for x in result] if isinstance(result, list) else present(result)
         print(json.dumps({"ok": True, "data": result}, ensure_ascii=True, indent=2))
         return 0
     except (ValueError, OSError, sqlite3.Error) as error:

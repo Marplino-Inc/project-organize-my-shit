@@ -1,5 +1,34 @@
 # Development status
 
+## v0.2.0 — structured tags and theme library
+
+Implemented: name/value tags with explicit null, inherited project defaults, per-item overrides and
+copying another project's defaults. Effective tags drive cards, filtering, dashboards, detail panels,
+reports and CLI output. Database version 4 creates a backup before migrating old tag arrays; snapshot
+version 2 retains defaults/overrides and imports version 1. CLI contract version 2 is documented.
+
+Five authored palette adaptations each support light/dark/system mode, with persistent selection and
+an in-app swatch catalog. Original palette remains the default. No additional runtime dependencies or
+external font assets were added. The original demo direction was accepted; the new individual palettes
+have not yet received user acceptance.
+
+Validation on Windows with temporary synthetic workspaces:
+
+- 50 pytest checks passed, including migration and pre-migration backup contents, repeat initialization,
+  inherited changes/null/reset semantics, strict tag validation, v1/v2 snapshots, CLI/report effective
+  tags, and 4.5:1 normal-text/button token contrasts for all ten variants.
+- Chromium exercised all five palettes in light/dark, reload persistence, system appearance, default-tag
+  creation, null override/reset, default-set copying, external default changes, effective tag filtering,
+  and the existing CRUD, revision conflict, sharing and layout flows.
+- Rendered card-title contrast checked in all ten variants. Screenshots retained locally in ignored
+  artifacts; Material Blue dark and Shiny Mint light visually inspected. This is not a full accessibility audit.
+- New private visual-style skill structurally validated and installed separately in ai-skills; no personal
+  profile or private collaboration material is included in this public application.
+- Windows source ZIP passed extraction/Start.cmd checks from a path with spaces, fresh workspace
+  creation, and project/mode/palette persistence through a full process restart.
+
+The existing platform and performance limits below still apply.
+
 ## v0.1.0 release
 
 Implemented locally: card board, hierarchy, project lifecycle, repository links, tags, effort labels,

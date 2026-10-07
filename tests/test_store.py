@@ -7,14 +7,6 @@ from organizer.cli import main as cli
 from organizer.reports import html_report
 
 
-@pytest.fixture
-def workspace(tmp_path):
-    path = tmp_path / "test.db"
-    store.initialize(path)
-    root = store.save(path, {"kind": "Project", "project_key": "TEST", "title": "Test project"})
-    return path, root
-
-
 def child(path, parent, title="A task", **fields):
     return store.save(
         path,
@@ -194,8 +186,8 @@ def test_duplicate_undirected_relationship_rejected(workspace):
 
 def test_tags_normalized_and_ids_stable(workspace):
     path, root = workspace
-    item = child(path, root, tags=[" Design ", "design", "", "Color"])
-    assert item["tags"] == ["design", "color"]
+    item = child(path, root, tags={" Design ": " Browser ", "Color": None})
+    assert item["tags"] == {"design": "Browser", "color": None}
     updated = store.save(path, {"status": "Done"}, item["id"], item["revision"])
     assert store.ticket(item) == store.ticket(updated)
     assert child(path, root)["number"] == 3
