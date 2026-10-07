@@ -15,7 +15,7 @@ from urllib.request import urlopen
 
 from playwright.sync_api import expect, sync_playwright
 
-from organizer import store
+from organizer import store, themes
 from organizer.demo import seed
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -98,6 +98,29 @@ def main():
                     expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
                     page.get_by_role("button", name="Light", exact=True).click()
 
+                    for family, theme in themes.FAMILIES.items():
+                        page.get_by_label("Palette", exact=True).click()
+                        page.get_by_role("option", name=theme["name"], exact=True).click()
+                        page.wait_for_function(
+                            "color => getComputedStyle(document.body).getPropertyValue('--canvas').trim() === color",
+                            arg=theme["dark"][0]
+                            if "body--dark" in page.locator("body").get_attribute("class")
+                            else theme["light"][0],
+                        )
+                        for mode in ("Light", "Dark"):
+                            page.get_by_role("button", name=mode, exact=True).click()
+                            expect(page.locator("body")).to_have_class(
+                                re.compile(r"\bbody--" + mode.lower() + r"\b")
+                            )
+                            check_card_contrast(page)
+                            page.screenshot(
+                                path=str(artifacts / f"theme-{family}-{mode.lower()}.png"), full_page=True
+                            )
+                        page.reload()
+                        expect(page.get_by_label("Palette", exact=True)).to_have_value(theme["name"])
+                        assert store.setting(db, "palette", "organize") == family
+                    page.get_by_role("button", name="Light", exact=True).click()
+
                     # Create a project with a repository and an independent lifecycle.
                     page.get_by_role("button", name="New project", exact=True).last.click()
                     dialog = page.get_by_role("dialog")
@@ -108,6 +131,12 @@ def main():
                     )
                     dialog.get_by_label("Status", exact=True).click()
                     page.get_by_role("option", name="Just Designing", exact=True).click()
+                    dialog.get_by_role("button", name="Add default tag", exact=True).click()
+                    dialog.get_by_label("Default tag name", exact=True).fill("owner")
+                    dialog.get_by_label("Default tag value", exact=True).fill("Gary")
+                    dialog.get_by_role("button", name="Add default tag", exact=True).click()
+                    dialog.get_by_label("Default tag name", exact=True).nth(1).fill("release")
+                    dialog.get_by_role("checkbox", name="Null", exact=True).nth(1).click()
                     dialog.get_by_role("button", name="Save project", exact=True).click()
                     expect(page.get_by_role("dialog")).to_have_count(0)
                     expect(page.get_by_text("Just Designing", exact=True)).to_be_visible()
@@ -123,19 +152,50 @@ def main():
                     dialog = page.get_by_role("dialog")
                     dialog.get_by_label("Title", exact=True).fill("Build a colorful card")
                     dialog.get_by_label("Description", exact=True).fill("Detailed notes\nSecond line")
-                    dialog.get_by_label("Tags", exact=True).fill("Design, browser")
+                    expect(dialog.get_by_label("Tag value", exact=True).first).to_be_disabled()
+                    dialog.get_by_role("switch", name="Override", exact=True).first.click()
+                    dialog.get_by_role("checkbox", name="Null", exact=True).first.click()
+                    expect(dialog.get_by_label("Tag value", exact=True).first).to_be_disabled()
+                    dialog.get_by_role("button", name="Add tag", exact=True).click()
+                    dialog.get_by_label("Tag name", exact=True).fill("area")
+                    dialog.get_by_label("Tag value", exact=True).last.fill("Design")
                     dialog.get_by_role("button", name="Save item", exact=True).click()
                     expect(page.get_by_role("dialog")).to_have_count(0)
                     card = page.locator(".ticket-card").filter(has_text="Build a colorful card")
                     expect(card).to_be_visible()
+                    expect(card.get_by_text("owner: (null)", exact=True)).to_be_visible()
+                    expect(card.get_by_text("release: (null)", exact=True)).to_be_visible()
                     card.get_by_role("button", name="Build a colorful card", exact=True).click()
                     expect(page.get_by_text("Detailed notes\nSecond line", exact=True)).to_be_visible()
                     page.get_by_role("button", name="Edit item", exact=True).click()
                     dialog = page.get_by_role("dialog")
                     dialog.get_by_label("Title", exact=True).fill("A card worth keeping")
+                    dialog.get_by_role("switch", name="Override", exact=True).first.click()
+                    expect(dialog.get_by_label("Tag value", exact=True).first).to_have_value("Gary")
                     dialog.get_by_role("button", name="Save item", exact=True).click()
                     card = page.locator(".ticket-card").filter(has_text="A card worth keeping")
                     expect(card).to_be_visible()
+                    expect(card.get_by_text("owner: Gary", exact=True)).to_be_visible()
+                    root = next(x for x in store.load(db)[0] if store.ticket(x) == "WEB-0001")
+                    store.save(
+                        db,
+                        {"tag_defaults": {"owner": "Agent", "release": None}},
+                        root["id"],
+                        root["revision"],
+                    )
+                    expect(card.get_by_text("owner: Agent", exact=True)).to_be_visible(timeout=7000)
+
+                    # A project can reuse the entire set without an ongoing link to its source.
+                    page.get_by_role("button", name="New project", exact=True).last.click()
+                    dialog = page.get_by_role("dialog")
+                    dialog.get_by_label("Copy defaults from project", exact=True).click()
+                    page.get_by_role("option", name=re.compile("WEB.*Browser-tested project")).click()
+                    dialog.get_by_role("button", name="Copy set", exact=True).click()
+                    expect(dialog.get_by_label("Default tag name", exact=True).first).to_have_value("owner")
+                    expect(dialog.get_by_label("Default tag value", exact=True).first).to_have_value("Agent")
+                    expect(dialog.get_by_role("checkbox", name="Null", exact=True).nth(1)).to_be_checked()
+                    page.screenshot(path=str(artifacts / "project-tag-defaults.png"), full_page=True)
+                    dialog.get_by_role("button", name="Cancel", exact=True).click()
 
                     # Both pointer and keyboard/menu pathways move persisted status.
                     card.locator(".drag-handle").drag_to(page.locator('[data-status="In progress"]'))
@@ -170,7 +230,13 @@ def main():
                     page.get_by_role("button", name="My workspace", exact=True).click()
                     page.get_by_label("Search work", exact=True).fill("tooltip")
                     expect(page.locator(".ticket-card")).to_have_count(1)
-                    page.get_by_role("button", name="Clear", exact=True).click()
+                    page.get_by_role("button", name="Clear", exact=True).last.click()
+                    expect(page.locator(".ticket-card")).to_have_count(13)
+                    page.get_by_label("Tag", exact=True).click()
+                    page.get_by_label("Tag", exact=True).fill("owner")
+                    page.get_by_role("option", name="owner: Agent", exact=True).click()
+                    expect(page.locator(".ticket-card")).to_have_count(1)
+                    page.get_by_role("button", name="Clear", exact=True).last.click()
                     expect(page.locator(".ticket-card")).to_have_count(13)
                     page.get_by_role("button", name="Map", exact=True).click()
                     expect(page.locator(".graph-shell svg")).to_be_visible()

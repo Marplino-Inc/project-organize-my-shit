@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0
+
+- Name/value tags with explicit nulls, dynamically inherited project default sets, per-item overrides,
+  and copying a default set from another project.
+- Effective tag filtering, dashboard groups, details and read-only reports.
+- Five palettes with light/dark/system modes: Organize, Shiny Mint, Viridis, Brewer Garden and Material Blue.
+- Automatic pre-migration database backup; snapshot v2 with backward import support for v1.
+- Breaking agent contract change: tags are objects rather than arrays; CLI v2 includes read-only effective tags.
+
 ## 0.1.0
 
 First release for local Windows use.

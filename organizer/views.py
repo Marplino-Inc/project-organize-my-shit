@@ -7,8 +7,9 @@ from pathlib import Path
 
 from nicegui import ui
 
-from . import store
+from . import store, themes
 from .reports import html_report
+from .tag_editor import tag_editor
 
 STATUS_COLORS = {
     "Backlog": "#9b96b0",
@@ -35,6 +36,10 @@ def register(path, demo=False):
         ui.colors(primary="#7053c1", secondary="#24a99a", positive="#087e6e", negative="#b04447")
         preference = store.setting(path, "theme", "System")
         dark = ui.dark_mode({"Light": False, "Dark": True, "System": None}[preference])
+        palette = store.setting(path, "palette", "organize")
+        if palette not in themes.FAMILIES:
+            palette = "organize"
+        theme_style = ui.html("<style>" + themes.css(palette) + "</style>", sanitize=False).classes("hidden")
         state = {
             "project": None,
             "stage": None,
@@ -92,7 +97,7 @@ def register(path, demo=False):
                 x
                 for x in selected_items()
                 if (not state["kind"] or x["kind"] == state["kind"])
-                and (not state["tag"] or state["tag"] in x["tags"])
+                and (not state["tag"] or state["tag"] in store.tag_options([x], data["items"]))
                 and (not state["status"] or x["status"] == state["status"])
                 and (state["effort"] is None or x["effort"] == state["effort"])
                 and (not state["blocked"] or is_blocked(x))
@@ -106,7 +111,7 @@ def register(path, demo=False):
                         + " "
                         + x["description"]
                         + " "
-                        + " ".join(x["tags"])
+                        + " ".join(store.tag_text(n, v) for n, v in tags_for(x).items())
                     ).casefold()
                 )
             ]
@@ -126,6 +131,9 @@ def register(path, demo=False):
         def effort_label(value):
             return store.EFFORT[value] if effort_scale == "T-shirt" or value is None else str(value)
 
+        def tags_for(item):
+            return store.effective_tags(item, data["items"])
+
         def project_color(item):
             root = next(
                 (
@@ -135,11 +143,20 @@ def register(path, demo=False):
                 ),
                 item,
             )
-            return store.COLORS[root["color"]]
+            return themes.project_colors(palette)[root["color"]]
 
-        def tag_label(tag):
-            palette = ("violet", "teal", "amber", "coral")
-            ui.label(tag).classes("tag tag-" + palette[sum(map(ord, tag)) % 4])
+        def tag_label(name, value):
+            index = sum(map(ord, name)) % 5
+            ui.label(store.tag_text(name, value)).classes("tag structured-tag").style(
+                f"--tag-accent:var(--palette-{index})"
+            )
+
+        def change_palette(value):
+            nonlocal palette
+            palette = value
+            store.set_setting(path, "palette", value)
+            theme_style.set_content("<style>" + themes.css(value) + "</style>")
+            refresh()
 
         def change_theme(value):
             dark.value = {"Light": False, "Dark": True, "System": None}[value]
@@ -259,13 +276,58 @@ def register(path, demo=False):
                     .props("outlined autogrow")
                     .classes("w-full")
                 )
-                tags = (
-                    ui.input(
-                        "Tags", value=", ".join(initial.get("tags", [])), placeholder="design, release, addon"
+                if is_project:
+                    ui.label("Project tag defaults").classes("eyebrow")
+                    ui.label(
+                        "Applied to this project and all its work items. Items can override a value or explicitly use null."
+                    ).classes("form-hint")
+                    read_defaults, replace_defaults, _ = tag_editor(
+                        initial.get("tag_defaults", {}), prefix="Default tag"
                     )
-                    .props("outlined hint='Separate tags with commas'")
-                    .classes("w-full")
-                )
+                    with ui.row().classes("w-full items-center"):
+                        copy_from = (
+                            ui.select(
+                                {
+                                    k: f"{k} · {v['title']}"
+                                    for k, v in roots.items()
+                                    if not item or v["id"] != item["id"]
+                                },
+                                label="Copy defaults from project",
+                            )
+                            .props("outlined dense")
+                            .classes("flex-1")
+                        )
+                        ui.button(
+                            "Copy set",
+                            on_click=lambda: (
+                                replace_defaults(roots[copy_from.value]["tag_defaults"])
+                                if copy_from.value
+                                else None
+                            ),
+                        ).props("flat")
+                    if initial.get("tags"):
+                        ui.label("Project-only overrides").classes("eyebrow")
+                        read_tags, _, _ = tag_editor(initial["tags"])
+                    else:
+
+                        def read_tags():
+                            return {}
+                else:
+                    ui.label("Tags").classes("eyebrow")
+                    ui.label(
+                        "Inherited defaults stay linked to the project. Override to set a different value or null."
+                    ).classes("form-hint")
+                    read_tags, _, update_defaults = tag_editor(
+                        initial.get("tags", {}), roots[project_select.value]["tag_defaults"]
+                    )
+
+                    def update_tag_project():
+                        try:
+                            update_defaults(roots[project_select.value]["tag_defaults"])
+                        except ValueError as error:
+                            ui.notify(str(error), type="negative")
+
+                    project_select.on_value_change(update_tag_project)
                 blocked = (
                     ui.input("Blocked reason (optional)", value=initial.get("blocked", ""))
                     .props("outlined")
@@ -274,11 +336,18 @@ def register(path, demo=False):
                 error_label = ui.label().classes("error-text")
 
                 def save_item():
+                    try:
+                        tags = read_tags()
+                        defaults = read_defaults() if is_project else {}
+                    except ValueError as error:
+                        error_label.text = str(error)
+                        return
                     fields = dict(
                         title=title.value,
                         description=description.value,
                         status=status_select.value,
-                        tags=tags.value.split(","),
+                        tags=tags,
+                        tag_defaults=defaults,
                         blocked=blocked.value,
                         effort=estimate.value or None,
                     )
@@ -331,8 +400,8 @@ def register(path, demo=False):
                 with ui.row().classes("gap-2"):
                     ui.label(item["status"]).classes("tag")
                     ui.label("Effort: " + effort_label(item["effort"])).classes("tag")
-                    for tag in item["tags"]:
-                        tag_label(tag)
+                    for name, value in store.effective_tags(item, items).items():
+                        tag_label(name, value)
                 if item["repository_url"]:
                     ui.link("Open repository ↗", item["repository_url"], new_tab=True).classes(
                         "repo-link"
@@ -529,6 +598,26 @@ def register(path, demo=False):
             nonlocal effort_scale
             with client.layout, ui.dialog() as dialog, ui.card().classes("dialog-card"):
                 ui.label("Workspace preferences").classes("dialog-heading")
+                ui.label("Palette library").classes("eyebrow")
+                ui.label(
+                    "Each palette supports Light, Dark, and System. Preview it on your actual board; switch back at any time."
+                ).classes("form-hint")
+                with ui.element("div").classes("palette-grid"):
+                    for key, theme in themes.FAMILIES.items():
+                        with ui.element("div").classes("palette-choice"):
+                            ui.label(theme["name"]).classes("font-bold")
+                            with ui.row().classes("gap-1"):
+                                for color in theme["colors"]:
+                                    ui.element("span").classes("palette-swatch").style(
+                                        "background:" + color
+                                    ).tooltip(color)
+                            ui.label(theme["description"]).classes("form-hint")
+                            ui.button(
+                                "Use " + theme["name"], on_click=lambda key=key: change_palette(key)
+                            ).props("flat dense")
+                            if theme["url"]:
+                                ui.link(theme["source"], theme["url"], new_tab=True).classes("repo-link")
+                ui.separator()
                 ui.label("Effort labels").classes("eyebrow")
                 ui.label(
                     "Both choices use the same five ordered levels. Changing labels preserves estimates; levels are not hours."
@@ -588,7 +677,7 @@ def register(path, demo=False):
                             )
                         ):
                             ui.element("span").classes("status-dot").style(
-                                "background:" + store.COLORS[root["color"]]
+                                "background:" + project_color(root)
                             )
                             ui.label(root["title"]).classes("ellipsis text-xs")
                     ui.button("New project", icon="add", on_click=lambda: edit_dialog(project=True)).props(
@@ -639,10 +728,11 @@ def register(path, demo=False):
                 if parent:
                     ui.label(parent["title"]).classes("ticket-context")
                 with ui.element("div").classes("tags"):
-                    for tag in item["tags"][:3]:
-                        tag_label(tag)
-                    if len(item["tags"]) > 3:
-                        ui.label(f"+{len(item['tags']) - 3}").classes("tag")
+                    effective = tags_for(item)
+                    for name, value in list(effective.items())[:3]:
+                        tag_label(name, value)
+                    if len(effective) > 3:
+                        ui.label(f"+{len(effective) - 3}").classes("tag")
                 if is_blocked(item):
                     with ui.element("div").classes("blocked"):
                         ui.icon("block", size="13px")
@@ -820,7 +910,12 @@ def register(path, demo=False):
                                     state["view"] = "Board"
                                     content.refresh()
 
-                                ui.button(str(label), on_click=drill).props("flat dense")
+                                text = (
+                                    store.tag_options(tickets, data["items"]).get(label, str(label))
+                                    if filter_key == "tag"
+                                    else str(label)
+                                )
+                                ui.button(text, on_click=drill).props("flat dense")
                                 with ui.element("div").classes("distribution-track"):
                                     ui.element("div").style(
                                         f"height:100%;width:{100 * count / maximum}%;background:{palette[index % len(palette)]};border-radius:5px"
@@ -837,13 +932,13 @@ def register(path, demo=False):
                     "Work by type",
                     dict(Counter(x["kind"] for x in tickets)),
                     "kind",
-                    list(store.COLORS.values()),
+                    themes.FAMILIES[palette]["colors"],
                 )
                 distribution(
                     "Work by tag",
-                    dict(Counter(tag for x in tickets for tag in x["tags"])),
+                    dict(Counter(tag for x in tickets for tag in store.tag_options([x], data["items"]))),
                     "tag",
-                    list(store.COLORS.values()),
+                    themes.FAMILIES[palette]["colors"],
                 )
                 with ui.element("section").classes("panel"):
                     ui.label("Effort distribution").classes("text-base font-bold mb-3")
@@ -897,6 +992,12 @@ def register(path, demo=False):
                     if demo:
                         ui.label("Demo").classes("demo-label")
                 with ui.row().classes("items-center gap-3"):
+                    ui.select(
+                        {key: value["name"] for key, value in themes.FAMILIES.items()},
+                        label="Palette",
+                        value=palette,
+                        on_change=lambda event: change_palette(event.value),
+                    ).props("outlined dense").classes("w-44")
                     ui.toggle(
                         ["Light", "Dark", "System"],
                         value=store.setting(path, "theme", "System"),
@@ -988,7 +1089,7 @@ def register(path, demo=False):
                     with (
                         ui.element("div")
                         .classes("project-card")
-                        .style("--project-color:" + store.COLORS[project["color"]])
+                        .style("--project-color:" + project_color(project))
                     ):
                         with ui.row().classes("w-full justify-between items-center"):
                             ui.label(store.ticket(project)).classes("project-key")
@@ -1034,8 +1135,9 @@ def register(path, demo=False):
                     with search.add_slot("prepend"):
                         ui.icon("search", size="18px")
                     ui.select(
-                        sorted({tag for x in selected_items() for tag in x["tags"]}),
+                        store.tag_options(selected_items(), data["items"]),
                         label="Tag",
+                        with_input=True,
                         value=state["tag"],
                         on_change=lambda e: change_filter("tag", e.value),
                     ).props("outlined dense clearable")

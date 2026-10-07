@@ -17,7 +17,7 @@ def seed(path):
                 color=color,
                 description=description,
                 status="In Progress",
-                tags=["demo"],
+                tag_defaults={"workspace": "demo", "release": None},
             ),
         )
 
@@ -31,7 +31,7 @@ def seed(path):
                 kind=kind,
                 status=status,
                 effort=effort,
-                tags=tags or [],
+                tags={"area": ", ".join(tags)} if tags else {},
                 color=parent["color"],
                 **extra,
             ),
