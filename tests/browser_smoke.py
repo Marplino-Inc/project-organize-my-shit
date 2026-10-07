@@ -194,6 +194,9 @@ def main():
                     expect(dialog.get_by_label("Default tag name", exact=True).first).to_have_value("owner")
                     expect(dialog.get_by_label("Default tag value", exact=True).first).to_have_value("Agent")
                     expect(dialog.get_by_role("checkbox", name="Null", exact=True).nth(1)).to_be_checked()
+                    expect(dialog.locator(".q-checkbox__inner--truthy")).to_have_css(
+                        "color", "rgb(37, 94, 170)"
+                    )
                     page.screenshot(path=str(artifacts / "project-tag-defaults.png"), full_page=True)
                     dialog.get_by_role("button", name="Cancel", exact=True).click()
 

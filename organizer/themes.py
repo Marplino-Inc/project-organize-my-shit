@@ -173,7 +173,8 @@ def css(family):
                 "warning": "#895812" if mode == "light" else "#f3c178",
                 "negative": "#b04447" if mode == "light" else "#ffa3a3",
                 "shadow": "0 3px 12px #29243b06" if mode == "light" else "0 3px 12px #00000012",
-                "q-primary": tokens["button"],
+                # NiceGUI sets this token inline on body; semantic themes take precedence.
+                "q-primary": tokens["button"] + " !important",
             }
         )
         for index, color in enumerate(theme["colors"]):

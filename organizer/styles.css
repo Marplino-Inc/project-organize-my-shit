@@ -114,6 +114,7 @@ body.body--dark .tag-amber { background:#443921; color:#efd093; }body.body--dark
 /* Quasar places important utility colors in cascade layers. An early layer
    deliberately wins for these semantic colors, including in dark mode. */
 @layer theme {
+  .q-item.text-primary, .q-field--focused .q-field__label { color:var(--accent) !important; }
   .q-btn.text-primary { color:var(--accent) !important; }
   .q-btn.ticket-title.text-primary, .q-btn.project-title.text-primary,
   .q-btn.secondary-button.text-primary { color:var(--text) !important; }

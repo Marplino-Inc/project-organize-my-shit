@@ -24,6 +24,8 @@ Validation on Windows with temporary synthetic workspaces:
   artifacts; Material Blue dark and Shiny Mint light visually inspected. This is not a full accessibility audit.
 - New private visual-style skill structurally validated and installed separately in ai-skills; no personal
   profile or private collaboration material is included in this public application.
+- Windows source ZIP passed extraction/Start.cmd checks from a path with spaces, fresh workspace
+  creation, and project/mode/palette persistence through a full process restart.
 
 The existing platform and performance limits below still apply.
 
