@@ -39,6 +39,7 @@ def register(path, demo=False):
         palette = store.setting(path, "palette", "organize")
         if palette not in themes.FAMILIES:
             palette = "organize"
+        appearance = {"palette": palette}
         theme_style = ui.html("<style>" + themes.css(palette) + "</style>", sanitize=False).classes("hidden")
         state = {
             "project": None,
@@ -48,13 +49,12 @@ def register(path, demo=False):
             "tag": None,
             "kind": None,
             "status": None,
-            "effort": None,
+            "condensed": store.setting(path, "board_density", "Full") == "Condensed",
             "blocked": False,
             "expanded": False,
             "signature": None,
         }
         data = {"items": [], "links": []}
-        effort_scale = store.setting(path, "effort_scale", "T-shirt")
 
         def signature(items, links):
             return (
@@ -99,7 +99,6 @@ def register(path, demo=False):
                 if (not state["kind"] or x["kind"] == state["kind"])
                 and (not state["tag"] or state["tag"] in store.tag_options([x], data["items"]))
                 and (not state["status"] or x["status"] == state["status"])
-                and (state["effort"] is None or x["effort"] == state["effort"])
                 and (not state["blocked"] or is_blocked(x))
                 and (
                     not search
@@ -128,13 +127,10 @@ def register(path, demo=False):
                 )
             )
 
-        def effort_label(value):
-            return store.EFFORT[value] if effort_scale == "T-shirt" or value is None else str(value)
-
         def tags_for(item):
             return store.effective_tags(item, data["items"])
 
-        def project_color(item):
+        def project_color(item, literal=False):
             root = next(
                 (
                     x
@@ -143,7 +139,9 @@ def register(path, demo=False):
                 ),
                 item,
             )
-            return themes.project_colors(palette)[root["color"]]
+            if literal:
+                return themes.project_colors(palette)[root["color"]]
+            return f"var(--palette-{list(store.COLORS).index(root['color'])})"
 
         def tag_label(name, value):
             index = sum(map(ord, name)) % 5
@@ -153,10 +151,13 @@ def register(path, demo=False):
 
         def change_palette(value):
             nonlocal palette
+            if value == palette:
+                return
             palette = value
+            appearance["palette"] = value
             store.set_setting(path, "palette", value)
             theme_style.set_content("<style>" + themes.css(value) + "</style>")
-            refresh()
+            work_area.refresh()
 
         def change_theme(value):
             dark.value = {"Light": False, "Dark": True, "System": None}[value]
@@ -255,22 +256,6 @@ def register(path, demo=False):
                         label="Status",
                         value=initial.get("status", "Still a Dream" if is_project else status),
                     ).props("outlined")
-                    estimate = ui.select(
-                        {0: "Not estimated", **{n: effort_label(n) for n in range(1, 6)}},
-                        label="Effort",
-                        value=initial.get("effort") or 0,
-                    ).props("outlined")
-                    if is_project:
-                        estimate.disable()
-                    elif kind_select:
-
-                        def estimate_state():
-                            estimate.set_enabled(kind_select.value != "Major goal")
-                            if kind_select.value == "Major goal":
-                                estimate.value = 0
-
-                        kind_select.on_value_change(estimate_state)
-                        estimate_state()
                 description = (
                     ui.textarea("Description", value=initial.get("description", ""))
                     .props("outlined autogrow")
@@ -349,7 +334,6 @@ def register(path, demo=False):
                         tags=tags,
                         tag_defaults=defaults,
                         blocked=blocked.value,
-                        effort=estimate.value or None,
                     )
                     if is_project:
                         fields.update(
@@ -388,7 +372,7 @@ def register(path, demo=False):
             by_id = {x["id"]: x for x in items}
             with (
                 client.layout,
-                ui.dialog().props("position=right full-height") as dialog,
+                ui.dialog() as dialog,
                 ui.card().classes("dialog-card detail-card"),
             ):
                 with ui.row().classes("w-full items-center justify-between"):
@@ -399,7 +383,6 @@ def register(path, demo=False):
                 ui.label(item["title"]).classes("dialog-heading")
                 with ui.row().classes("gap-2"):
                     ui.label(item["status"]).classes("tag")
-                    ui.label("Effort: " + effort_label(item["effort"])).classes("tag")
                     for name, value in store.effective_tags(item, items).items():
                         tag_label(name, value)
                 if item["repository_url"]:
@@ -526,7 +509,7 @@ def register(path, demo=False):
                     items, _ = store.load(path)
                     included = [x for x in items if not project or x["project_key"] == project]
                     ui.download.content(
-                        html_report(included, effort_scale),
+                        html_report(included),
                         f"organize-{project or 'workspace'}-report.html",
                         "text/html",
                     )
@@ -595,41 +578,38 @@ def register(path, demo=False):
             dialog.open()
 
         def settings_dialog():
-            nonlocal effort_scale
             with client.layout, ui.dialog() as dialog, ui.card().classes("dialog-card"):
                 ui.label("Workspace preferences").classes("dialog-heading")
                 ui.label("Palette library").classes("eyebrow")
                 ui.label(
                     "Each palette supports Light, Dark, and System. Preview it on your actual board; switch back at any time."
                 ).classes("form-hint")
-                with ui.element("div").classes("palette-grid"):
-                    for key, theme in themes.FAMILIES.items():
-                        with ui.element("div").classes("palette-choice"):
-                            ui.label(theme["name"]).classes("font-bold")
-                            with ui.row().classes("gap-1"):
-                                for color in theme["colors"]:
-                                    ui.element("span").classes("palette-swatch").style(
-                                        "background:" + color
-                                    ).tooltip(color)
-                            ui.label(theme["description"]).classes("form-hint")
-                            ui.button(
-                                "Use " + theme["name"], on_click=lambda key=key: change_palette(key)
-                            ).props("flat dense")
-                            if theme["url"]:
-                                ui.link(theme["source"], theme["url"], new_tab=True).classes("repo-link")
-                ui.separator()
-                ui.label("Effort labels").classes("eyebrow")
-                ui.label(
-                    "Both choices use the same five ordered levels. Changing labels preserves estimates; levels are not hours."
-                ).classes("form-hint")
-
-                def update_scale(event):
-                    nonlocal effort_scale
-                    effort_scale = event.value
-                    store.set_setting(path, "effort_scale", event.value)
-                    refresh()
-
-                ui.toggle(["T-shirt", "1–5"], value=effort_scale, on_change=update_scale)
+                ui.select(
+                    {key: theme["name"] for key, theme in themes.FAMILIES.items()},
+                    label="Theme palette",
+                    with_input=True,
+                    on_change=lambda e: change_palette(e.value),
+                ).bind_value(appearance, "palette").props("outlined dense").classes("w-full")
+                with ui.element("div").classes("palette-preview"):
+                    ui.label().bind_text_from(
+                        appearance, "palette", backward=lambda key: themes.FAMILIES[key]["name"]
+                    ).classes("text-lg font-bold")
+                    with ui.row().classes("gap-2"):
+                        for index in range(5):
+                            ui.element("span").classes("palette-swatch").style(
+                                f"background:var(--palette-{index})"
+                            )
+                    ui.label().bind_text_from(
+                        appearance, "palette", backward=lambda key: themes.FAMILIES[key]["description"]
+                    ).classes("form-hint")
+                    with ui.element("div").classes("palette-sample"):
+                        ui.label("PROJ-0018").classes("ticket-id")
+                        ui.label("A clearer view of your next step").classes("font-bold")
+                        ui.label("Readable notes, useful color, and room for details.").classes("muted")
+                        ui.label("status: In progress").classes("tag self-start")
+                    ui.label().bind_text_from(
+                        appearance, "palette", backward=lambda key: themes.FAMILIES[key]["source"]
+                    ).classes("form-hint")
                 ui.separator()
                 ui.label("Backup").classes("eyebrow")
                 ui.label(
@@ -705,7 +685,21 @@ def register(path, demo=False):
                 .classes("ticket-card")
                 .style("--project-color:" + project_color(item)) as card
             ):
+                card.on(
+                    "click",
+                    lambda: detail(item),
+                    js_handler="event => { if (!event.target.closest('button, .drag-handle, .q-menu')) emit(); }",
+                )
                 cards[card.id] = item
+                if state["condensed"]:
+                    card.classes("condensed-card")
+                    ui.label(store.ticket(item)).classes("ticket-id drag-handle").tooltip(
+                        "Drag to change status"
+                    )
+                    ui.button(item["title"], on_click=lambda: detail(item)).props("flat no-caps").classes(
+                        "ticket-title"
+                    )
+                    return
                 with ui.element("div").classes("ticket-top"):
                     ui.label(store.ticket(item)).classes("ticket-id")
                     with ui.row().classes("items-center gap-1"):
@@ -737,13 +731,6 @@ def register(path, demo=False):
                     with ui.element("div").classes("blocked"):
                         ui.icon("block", size="13px")
                         ui.label("Blocked").tooltip(item["blocked"] or "An unfinished item blocks this work.")
-                with ui.element("div").classes("ticket-footer"):
-                    with ui.row().classes("gap-1 items-center"):
-                        ui.icon(ICONS[item["kind"]], size="14px")
-                        ui.label(item["kind"])
-                    ui.label(effort_label(item["effort"]) if item["effort"] else "—").classes(
-                        "effort"
-                    ).tooltip("Effort: " + effort_label(item["effort"]))
 
         def board(items):
             items = [x for x in items if x["kind"] != "Project"]
@@ -758,7 +745,7 @@ def register(path, demo=False):
             statuses = list(store.STATUSES[:4])
             if state["status"] == "Cancelled":
                 statuses = ["Cancelled"]
-            with ui.element("div").classes("board"):
+            with ui.element("div").classes("board" + (" condensed-board" if state["condensed"] else "")):
                 for status in statuses:
                     matches = [x for x in items if x["status"] == status]
                     with ui.element("section").classes("board-column").props(f"aria-label='{status} column'"):
@@ -825,7 +812,7 @@ def register(path, demo=False):
                     "name": store.ticket(x) + "\n" + x["title"][:30],
                     "value": store.ticket(x),
                     "symbolSize": 44 if x["kind"] == "Project" else 26,
-                    "itemStyle": {"color": project_color(x)},
+                    "itemStyle": {"color": project_color(x, literal=True)},
                     "label": {"show": True, "position": "bottom"},
                 }
                 for x in included
@@ -940,16 +927,6 @@ def register(path, demo=False):
                     "tag",
                     themes.FAMILIES[palette]["colors"],
                 )
-                with ui.element("section").classes("panel"):
-                    ui.label("Effort distribution").classes("text-base font-bold mb-3")
-                    counts = Counter(x["effort"] for x in tickets)
-                    for effort in (None, 1, 2, 3, 4, 5):
-                        with ui.row().classes("w-full justify-between mb-3"):
-                            ui.label(effort_label(effort)).classes("text-sm muted")
-                            ui.label(str(counts[effort])).classes("text-sm")
-                    ui.label(
-                        "Ordered estimates, not hours. Tags overlap, so tag counts can exceed the item total."
-                    ).classes("form-hint")
             ui.label(
                 "Charts count matching work items by level. Completion cards above count only committed leaf work in the selected project scope."
             ).classes("form-hint mt-4")
@@ -995,9 +972,10 @@ def register(path, demo=False):
                     ui.select(
                         {key: value["name"] for key, value in themes.FAMILIES.items()},
                         label="Palette",
+                        with_input=True,
                         value=palette,
                         on_change=lambda event: change_palette(event.value),
-                    ).props("outlined dense").classes("w-44")
+                    ).bind_value(appearance, "palette").props("outlined dense").classes("w-44")
                     ui.toggle(
                         ["Light", "Dark", "System"],
                         value=store.setting(path, "theme", "System"),
@@ -1009,106 +987,164 @@ def register(path, demo=False):
                     ui.button("Share", icon="ios_share", on_click=sharing).props("flat").classes(
                         "secondary-button"
                     )
-            with ui.element("div").classes("hero"):
-                with ui.element("div"):
-                    ui.html(
-                        "<h1>"
-                        + ("Your ideas. Taking shape." if not selected else "Your project, in focus.")
-                        + "</h1>"
-                    )
+            if selected:
+                scope = selected_items()
+                leaves = store.active_leaves(scope)
+                done, total = store.progress(scope)
+                with ui.element("section").classes("project-overview"):
+                    with ui.row().classes("w-full items-center justify-between"):
+                        ui.label("Project overview · " + store.ticket(selected)).classes("eyebrow")
+                        ui.button("Edit project", icon="edit", on_click=lambda: edit_dialog(selected)).props(
+                            "flat dense"
+                        )
+                    ui.label(selected["title"]).classes("project-heading")
+                    with ui.row().classes("items-center gap-2"):
+                        ui.label(selected["status"]).classes("tag")
+                        if selected["repository_url"]:
+                            ui.link("Open repository ↗", selected["repository_url"], new_tab=True).classes(
+                                "repo-link"
+                            ).props("rel=noopener")
                     ui.label(
-                        selected["title"]
-                        if selected
-                        else "A little structure. More room to make things happen."
-                    ).classes("muted text-sm")
-                    if selected and selected["repository_url"]:
-                        ui.link("Open repository ↗", selected["repository_url"], new_tab=True).classes(
-                            "repo-link"
-                        ).props("rel=noopener")
-                with ui.element("div").classes("hero-symbol"):
-                    ui.icon("auto_awesome", size="34px")
-            scope = selected_items()
-            leaves = store.active_leaves(scope)
-            done, total = store.progress(scope)
-            with ui.element("div").classes("stats"):
-                stat(
-                    sum(x["kind"] == "Project" for x in scope),
-                    "Projects in scope",
-                    "folder_open",
-                    "var(--accent)",
-                )
-                stat(
-                    sum(x["status"] == "In progress" for x in leaves),
-                    "Work in progress",
-                    "timelapse",
-                    "var(--warning)",
-                )
-                stat(f"{done}/{total}", "Work items completed", "task_alt", "var(--positive)")
-                stat(
-                    sum(is_blocked(x) and x["status"] not in ("Done", "Cancelled") for x in leaves),
-                    "Blocked work items",
-                    "block",
-                    "var(--negative)",
-                )
-            if not roots:
-                with ui.element("div").classes("empty-state"):
-                    ui.icon("dashboard_customize", size="45px").style("color:var(--accent)")
-                    ui.html("<h2>Give your next idea a home.</h2>")
-                    ui.label(
-                        "Start a project, break it into a few goals, and make your first move. Everything stays on this computer."
-                    )
-                    ui.button(
-                        "Create your first project", icon="add", on_click=lambda: edit_dialog(project=True)
-                    ).classes("primary-button")
-                    ui.button("Import a project", icon="file_upload", on_click=sharing).props("flat")
-                return
-            with ui.element("div").classes("section-title"):
-                ui.html("<h2>" + ("Project overview" if selected else "Your projects") + "</h2>")
-
-                def filter_stage(event):
-                    state["stage"] = event.value
-                    content.refresh()
-
-                ui.select(
-                    list(store.PROJECT_STATUSES),
-                    label="Project stage",
-                    value=state["stage"],
-                    on_change=filter_stage,
-                ).props("outlined dense clearable").classes("w-48 ml-auto mr-3")
-                ui.button("New project", icon="add", on_click=lambda: edit_dialog(project=True)).props(
-                    "flat dense"
-                ).classes("text-xs muted")
-            with ui.element("div").classes("project-grid"):
-                for project in [
-                    x
-                    for x in ([selected] if selected else roots)
-                    if not state["stage"] or x["status"] == state["stage"]
-                ]:
-                    items = [x for x in data["items"] if x["project_key"] == project["project_key"]]
-                    done, total = store.progress(items)
+                        selected["description"] or "No project description yet. Add one with Edit project."
+                    ).classes("project-description")
+                    with ui.row().classes("gap-2"):
+                        for name, value in tags_for(selected).items():
+                            tag_label(name, value)
+                    with ui.element("div").classes("stats"):
+                        stat(
+                            sum(x["kind"] in ("Major goal", "Minor goal") for x in scope),
+                            "Goals",
+                            "flag",
+                            "var(--accent)",
+                        )
+                        stat(
+                            sum(x["status"] == "In progress" for x in leaves),
+                            "Work in progress",
+                            "timelapse",
+                            "var(--warning)",
+                        )
+                        stat(f"{done}/{total}", "Work items completed", "task_alt", "var(--positive)")
+                        stat(
+                            sum(is_blocked(x) and x["status"] not in ("Done", "Cancelled") for x in leaves),
+                            "Blocked work items",
+                            "block",
+                            "var(--negative)",
+                        )
                     with (
                         ui.element("div")
-                        .classes("project-card")
-                        .style("--project-color:" + project_color(project))
+                        .classes("progress-track")
+                        .style("--project-color:" + project_color(selected))
                     ):
-                        with ui.row().classes("w-full justify-between items-center"):
-                            ui.label(store.ticket(project)).classes("project-key")
-                            ui.button(icon="open_in_new", on_click=lambda x=project: detail(x)).props(
-                                f"flat round dense size=xs aria-label='Open {project['project_key']} project details'"
-                            )
+                        ui.element("div").classes("progress-fill").style(
+                            f"width:{100 * done / total if total else 0}%"
+                        )
+                    ui.label(
+                        f"{round(100 * done / total)}% complete" if total else "No planned work yet"
+                    ).classes("text-xs muted")
+            else:
+                with ui.element("div").classes("hero"):
+                    with ui.element("div"):
+                        ui.html(
+                            "<h1>"
+                            + ("Your ideas. Taking shape." if not selected else "Your project, in focus.")
+                            + "</h1>"
+                        )
+                        ui.label(
+                            selected["title"]
+                            if selected
+                            else "A little structure. More room to make things happen."
+                        ).classes("muted text-sm")
+                        if selected and selected["repository_url"]:
+                            ui.link("Open repository ↗", selected["repository_url"], new_tab=True).classes(
+                                "repo-link"
+                            ).props("rel=noopener")
+                    with ui.element("div").classes("hero-symbol"):
+                        ui.icon("auto_awesome", size="34px")
+                scope = selected_items()
+                leaves = store.active_leaves(scope)
+                done, total = store.progress(scope)
+                with ui.element("div").classes("stats"):
+                    stat(
+                        sum(x["kind"] == "Project" for x in scope),
+                        "Projects in scope",
+                        "folder_open",
+                        "var(--accent)",
+                    )
+                    stat(
+                        sum(x["status"] == "In progress" for x in leaves),
+                        "Work in progress",
+                        "timelapse",
+                        "var(--warning)",
+                    )
+                    stat(f"{done}/{total}", "Work items completed", "task_alt", "var(--positive)")
+                    stat(
+                        sum(is_blocked(x) and x["status"] not in ("Done", "Cancelled") for x in leaves),
+                        "Blocked work items",
+                        "block",
+                        "var(--negative)",
+                    )
+                if not roots:
+                    with ui.element("div").classes("empty-state"):
+                        ui.icon("dashboard_customize", size="45px").style("color:var(--accent)")
+                        ui.html("<h2>Give your next idea a home.</h2>")
+                        ui.label(
+                            "Start a project, break it into a few goals, and make your first move. Everything stays on this computer."
+                        )
                         ui.button(
-                            project["title"], on_click=lambda key=project["project_key"]: choose_project(key)
-                        ).props("flat").classes("project-title")
-                        ui.label(project["status"]).classes("tag self-start mt-2")
-                        with ui.element("div").classes("progress-track"):
-                            ui.element("div").classes("progress-fill").style(
-                                f"width:{100 * done / total if total else 0}%"
-                            )
-                        with ui.row().classes("w-full justify-between text-xs muted"):
-                            ui.label(f"{done} of {total} work items done").tooltip(
-                                "Counts the lowest-level committed work once. Parent goals, ideas, and cancelled work are excluded."
-                            )
-                            ui.label(f"{round(100 * done / total)}%" if total else "No planned work")
+                            "Create your first project",
+                            icon="add",
+                            on_click=lambda: edit_dialog(project=True),
+                        ).classes("primary-button")
+                        ui.button("Import a project", icon="file_upload", on_click=sharing).props("flat")
+                    return
+                with ui.element("div").classes("section-title"):
+                    ui.html("<h2>" + ("Project overview" if selected else "Your projects") + "</h2>")
+
+                    def filter_stage(event):
+                        state["stage"] = event.value
+                        content.refresh()
+
+                    ui.select(
+                        list(store.PROJECT_STATUSES),
+                        label="Project stage",
+                        value=state["stage"],
+                        on_change=filter_stage,
+                    ).props("outlined dense clearable").classes("w-48 ml-auto mr-3")
+                    ui.button("New project", icon="add", on_click=lambda: edit_dialog(project=True)).props(
+                        "flat dense"
+                    ).classes("text-xs muted")
+                with ui.element("div").classes("project-grid"):
+                    for project in [
+                        x
+                        for x in ([selected] if selected else roots)
+                        if not state["stage"] or x["status"] == state["stage"]
+                    ]:
+                        items = [x for x in data["items"] if x["project_key"] == project["project_key"]]
+                        done, total = store.progress(items)
+                        with (
+                            ui.element("div")
+                            .classes("project-card")
+                            .style("--project-color:" + project_color(project))
+                        ):
+                            with ui.row().classes("w-full justify-between items-center"):
+                                ui.label(store.ticket(project)).classes("project-key")
+                                ui.button(icon="open_in_new", on_click=lambda x=project: detail(x)).props(
+                                    f"flat round dense size=xs aria-label='Open {project['project_key']} project details'"
+                                )
+                            ui.button(
+                                project["title"],
+                                on_click=lambda key=project["project_key"]: choose_project(key),
+                            ).props("flat").classes("project-title")
+                            ui.label(project["status"]).classes("tag self-start mt-2")
+                            with ui.element("div").classes("progress-track"):
+                                ui.element("div").classes("progress-fill").style(
+                                    f"width:{100 * done / total if total else 0}%"
+                                )
+                            with ui.row().classes("w-full justify-between text-xs muted"):
+                                ui.label(f"{done} of {total} work items done").tooltip(
+                                    "Counts the lowest-level committed work once. Parent goals, ideas, and cancelled work are excluded."
+                                )
+                                ui.label(f"{round(100 * done / total)}%" if total else "No planned work")
             with ui.element("div").classes("workspace-panel"):
                 with ui.row().classes("w-full justify-between items-center"):
                     with ui.element("div").classes("view-tabs"):
@@ -1121,6 +1157,16 @@ def register(path, demo=False):
                             ui.button(name, icon=icon, on_click=lambda name=name: change_view(name)).props(
                                 "flat"
                             ).classes("selected" if state["view"] == name else "")
+                    if state["view"] == "Board":
+
+                        def change_density(event):
+                            state["condensed"] = event.value
+                            store.set_setting(path, "board_density", "Condensed" if event.value else "Full")
+                            work_area.refresh()
+
+                        ui.switch("Condensed view", value=state["condensed"], on_change=change_density).props(
+                            "dense"
+                        )
                     ui.button("New item", icon="add", on_click=edit_dialog).classes("primary-button")
                 with ui.element("div").classes("filters"):
                     search = (
@@ -1166,7 +1212,7 @@ def register(path, demo=False):
                         ).props("dense")
 
                     def clear_filters():
-                        state.update(search="", tag=None, kind=None, status=None, effort=None, blocked=False)
+                        state.update(search="", tag=None, kind=None, status=None, blocked=False)
                         content.refresh()
 
                     ui.button("Clear", on_click=clear_filters).props("flat dense").classes("text-xs muted")

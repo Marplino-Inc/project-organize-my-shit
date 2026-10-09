@@ -61,6 +61,7 @@ def test_legacy_database_migration_backup_and_idempotence(workspace):
     store.add_link(path, root["id"], task["id"], "relates to")
     with sqlite3.connect(path) as db:
         db.execute("ALTER TABLE items DROP COLUMN tag_defaults")
+        db.execute("ALTER TABLE items ADD COLUMN effort INTEGER")
         db.execute("UPDATE items SET tags=? WHERE id=?", (json.dumps(["legacy"]), root["id"]))
         db.execute("UPDATE items SET tags=? WHERE id=?", (json.dumps(["local"]), task["id"]))
         db.execute("PRAGMA user_version=3")
@@ -72,7 +73,7 @@ def test_legacy_database_migration_backup_and_idempotence(workspace):
     assert store.effective_tags(migrated, items) == {"legacy": None, "local": None}
     assert len(links) == 1
     assert store.setting(path, "theme") == "Dark"
-    backups = list(path.parent.glob("test.pre-v0.2.0-*.db"))
+    backups = list(path.parent.glob("test.pre-v0.3.0-*.db"))
     assert len(backups) == 1
     with sqlite3.connect(backups[0]) as db:
         assert db.execute("PRAGMA user_version").fetchone()[0] == 3
@@ -87,6 +88,9 @@ def test_snapshot_versions_preserve_tags(workspace, tmp_path, version):
     child(path, root, tags={"owner": None})
     root = store.save(path, {"tag_defaults": {"owner": "Gary", "release": None}}, root["id"], 1)
     raw = json.loads(store.export_snapshot(path))
+    raw["version"] = version
+    for item in raw["items"]:
+        item["effort"] = 3 if item["kind"] == "Task" else None
     if version == 1:
         raw["version"] = 1
         for item in raw["items"]:

@@ -17,7 +17,6 @@ PROJECT_STATUSES = ("Still a Dream", "Just Designing", "In Progress", "On Hold",
 KINDS = ("Project", "Major goal", "Minor goal", "Task", "Subtask", "Idea")
 COLORS = {"Violet": "#8b70ef", "Teal": "#24a99a", "Amber": "#d99a30", "Coral": "#ed7d75", "Blue": "#6299e8"}
 RANK = {"Project": 0, "Major goal": 1, "Minor goal": 2, "Task": 3, "Subtask": 4, "Idea": 4}
-EFFORT = {None: "Not estimated", 1: "XS", 2: "S", 3: "M", 4: "L", 5: "XL"}
 
 
 class Item(BaseModel):
@@ -41,7 +40,6 @@ class Item(BaseModel):
         "On Hold",
         "Completed",
     ] = "Backlog"
-    effort: int | None = Field(default=None, ge=1, le=5)
     tags: dict[str, str | None] = Field(default_factory=dict, max_length=30)
     tag_defaults: dict[str, str | None] = Field(default_factory=dict, max_length=30)
     color: Literal["Violet", "Teal", "Amber", "Coral", "Blue"] = "Violet"
@@ -79,7 +77,7 @@ class Link(BaseModel):
 class Snapshot(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     format: Literal["organize-snapshot"] = "organize-snapshot"
-    version: Literal[2] = 2
+    version: Literal[3] = 3
     exported_at: str
     items: list[Item] = Field(max_length=10000)
     links: list[Link] = Field(max_length=30000)
@@ -119,16 +117,16 @@ def initialize(path):
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with transaction(path) as db:
         version = db.execute("PRAGMA user_version").fetchone()[0]
-        if version > 4:
+        if version > 5:
             raise ValueError("This database needs a newer version of Organize.")
-        if 0 < version < 4:
+        if 0 < version < 5:
             # Reserve writes while a second read connection makes the pre-migration backup.
-            destination = Path(path).with_name(f"{Path(path).stem}.pre-v0.2.0-{uuid4().hex[:8]}.db")
+            destination = Path(path).with_name(f"{Path(path).stem}.pre-v0.3.0-{uuid4().hex[:8]}.db")
             backup(path, destination)
         db.execute("""CREATE TABLE IF NOT EXISTS items (
             id TEXT PRIMARY KEY, project_key TEXT NOT NULL, number INTEGER NOT NULL,
             parent_id TEXT REFERENCES items(id), kind TEXT NOT NULL, title TEXT NOT NULL,
-            description TEXT NOT NULL, status TEXT NOT NULL, effort INTEGER,
+            description TEXT NOT NULL, status TEXT NOT NULL,
             tags TEXT NOT NULL, color TEXT NOT NULL, blocked TEXT NOT NULL,
             created_at TEXT NOT NULL, updated_at TEXT NOT NULL, revision INTEGER NOT NULL,
             repository_url TEXT NOT NULL DEFAULT '',
@@ -162,7 +160,10 @@ def initialize(path):
                     "UPDATE items SET tags=?, tag_defaults=? WHERE id=?",
                     (json.dumps(local), json.dumps(defaults), row["id"]),
                 )
-        db.execute("PRAGMA user_version=4")
+        if 0 < version < 5:
+            db.execute("ALTER TABLE items DROP COLUMN effort")
+            db.execute("DELETE FROM settings WHERE key='effort_scale'")
+        db.execute("PRAGMA user_version=5")
 
 
 def read_items(db):
@@ -251,8 +252,6 @@ def validate_graph(items, links):
                 raise ValueError("Choose a parent in the same project.")
             if RANK[parent["kind"]] >= RANK[item["kind"]]:
                 raise ValueError("A parent must be a higher level than its child.")
-        if item["effort"] is not None and item["kind"] in ("Project", "Major goal"):
-            raise ValueError("Estimate minor goals, tasks, subtasks, or ideas.")
     seen = set()
     for link in links:
         Link.model_validate(link)
@@ -285,7 +284,6 @@ def save(path, fields, item_id=None, revision=None, actor="You"):
         "title",
         "description",
         "status",
-        "effort",
         "tags",
         "tag_defaults",
         "color",
@@ -434,6 +432,14 @@ def parse_snapshot(raw):
             item["tags"] = {} if item.get("kind") == "Project" else pairs
             item["tag_defaults"] = pairs if item.get("kind") == "Project" else {}
         payload["version"] = 2
+    if isinstance(payload, dict) and payload.get("version") == 2:
+        if not isinstance(payload.get("items"), list):
+            raise ValueError("Legacy snapshot items must be a list.")
+        for item in payload["items"]:
+            if not isinstance(item, dict):
+                raise ValueError("Invalid legacy snapshot item.")
+            item.pop("effort", None)
+        payload["version"] = 3
     snapshot = Snapshot.model_validate(payload)
     if not snapshot.items:
         raise ValueError("The snapshot contains no projects.")

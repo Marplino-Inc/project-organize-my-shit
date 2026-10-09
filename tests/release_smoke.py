@@ -89,6 +89,51 @@ def main():
 
             process = start()
             try:
+                repeated = subprocess.run(
+                    [
+                        "powershell.exe",
+                        "-NoProfile",
+                        "-ExecutionPolicy",
+                        "Bypass",
+                        "-File",
+                        "Start.ps1",
+                        "-Database",
+                        str(db),
+                        "-Port",
+                        str(port),
+                        "-NoBrowser",
+                    ],
+                    cwd=app_root,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+                assert repeated.returncode == 0, repeated.stdout + repeated.stderr
+                assert "already running" in repeated.stdout
+                other_db = root / "should-not-be-created.db"
+                conflict = subprocess.run(
+                    [
+                        "powershell.exe",
+                        "-NoProfile",
+                        "-ExecutionPolicy",
+                        "Bypass",
+                        "-File",
+                        "Start.ps1",
+                        "-Database",
+                        str(other_db),
+                        "-Port",
+                        str(port),
+                        "-NoBrowser",
+                    ],
+                    cwd=app_root,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+                assert conflict.returncode != 0
+                assert "already in use" in conflict.stdout + conflict.stderr
+                assert "Startup log:" in conflict.stdout
+                assert not other_db.exists()
                 with sync_playwright() as p:
                     browser = p.chromium.launch()
                     page = browser.new_page()

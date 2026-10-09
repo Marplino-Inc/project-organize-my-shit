@@ -29,18 +29,17 @@ uv run --no-dev python main.py --demo --port 8766
 ```
 
 Demo edits persist separately from your own projects. This is a source-based application,
-not a standalone executable or signed Windows installer. See the [v0.2.0 release notes](docs/releases/v0.2.0.md).
+not a standalone executable or signed Windows installer. See the [v0.3.0 release notes](docs/releases/v0.3.0.md).
 
 ## What is included
 
-- Five palettes, each with light, dark, and system appearance, remembered between launches.
+- 24 palettes, each with light, dark, and system appearance, remembered between launches.
 - Project colors and name/value tags, with compact cards and expandable details.
 - Projects → major goals → minor goals → tasks → subtasks, with optional skipped levels.
 - Ideas that do not count toward committed completion totals.
 - Stable IDs such as `APP-0001`, including an ID for the project itself.
 - Project stages: **Still a Dream, Just Designing, In Progress, On Hold, Completed, Cancelled**.
 - Separate task statuses: **Backlog, Ready, In progress, Done, Cancelled**.
-- Optional effort: **XS–XL** or **1–5**. Labels can change in Preferences; estimates retain their level.
 - A repository URL on each project. Repository links do not automatically synchronize GitHub issues.
 - Board, hierarchy outline, relationship map, and dashboard views.
 - Cross-project `blocks` and `relates to` links; unresolved blockers are visibly marked.
@@ -49,12 +48,14 @@ not a standalone executable or signed Windows installer. See the [v0.2.0 release
 
 Drag a card by its grip to move between status columns, or use its action menu.
 Within-column order is by stable ticket number; manual ordering is not saved.
-Click a card title to read the description, edit fields, add children, or link related work.
+Click a card body or title to open centered details, edit fields, add children, or link related work.
+**Condensed view** reduces the board to ticket-number/title rows and remembers your choice.
+Selecting a sidebar project replaces the aggregate summary with its description, status, repository,
+tags, goal count, active/blocked work and completion progress. **My workspace** restores the overview.
 
 Projects have an explicit lifecycle: finishing their tasks does **not** automatically mark them
 Completed. Completion totals count only the lowest-level committed work once, excluding ideas,
 cancelled items, and descendants of cancelled parents. An undivided goal counts as one work item.
-Effort is an ordered estimate, not hours or a percentage weight.
 
 ## Tags and themes
 
@@ -65,18 +66,27 @@ Changing a project default updates all items that inherit it. Add extra item-spe
 **Add tag**. **Copy defaults from project → Copy set** reuses another project's set; later edits to
 the source set do not change the copy. Filters and dashboard tag groups use the effective name/value pair.
 
-Use **Palette** beside Light / Dark / System to switch between **Organize, Shiny Mint, Viridis,
-Brewer Garden, and Material Blue**. Preferences shows their swatches and sources. All assets remain
-local. These are adaptations of the cited palette families, not exact copies of their UI frameworks.
+Use the searchable **Palette** dropdown beside Light / Dark / System to select from 24 families.
+Preferences has the same dropdown with one preview that stays visible and updates in place.
+The original five palettes are joined by 19 authored tonal palettes. All assets remain local.
 
-### Upgrading from 0.1.0
+### Upgrading from 0.1.0 or 0.2.0
 
 Stop the old app before starting the updated version. On first use, the app creates a sibling
-`*.pre-v0.2.0-*.db` backup before migrating the database. Old project tags become null-valued project
+`*.pre-v0.3.0-*.db` backup before migrating the database. Old project tags become null-valued project
 defaults; old work-item tags become null-valued local tags. Titles, IDs, descriptions, links, preferences,
-and activity are retained. Do not open the migrated database with 0.1.0; use the pre-upgrade backup to
-roll back. New exports use snapshot version 2; old version 1 snapshots still import. Agent payloads now
-use objects instead of tag arrays; see the [version 2 contract](docs/agent-interface.md).
+and activity are retained. Effort is removed from active storage and all interfaces; old values survive
+in the backup only. Do not open the migrated database with older code; use the pre-upgrade backup to
+roll back. New exports use snapshot version 3; version 1/2 snapshots still import, discarding effort.
+Agents must stop writing effort; see the [version 3 contract](docs/agent-interface.md).
+
+### Startup troubleshooting
+
+Launching this version again with the same workspace and port opens the running app. A different
+workspace, older app or other program on that port produces a conflict message before database changes.
+Close the older app before upgrading; use `-Port 8767` for a separate workspace. Startup output is saved
+in `%LOCALAPPDATA%/ProjectOrganize/logs/startup-*.log`. On failure, the launcher prints the exit code and
+log location with the underlying error.
 
 ## Local data and sharing
 
@@ -91,7 +101,7 @@ Use `--db "C:/path/to/workspace.db"` to open another workspace. The public sourc
 not contain your working database. The server binds only to `127.0.0.1` and has no network sharing mode.
 
 **Share → Export project snapshot** exports the selected project, or the whole workspace when no
-project is selected. Snapshots include descriptions, tags, statuses, estimates, and repository URLs.
+project is selected. Snapshots include descriptions, tags, statuses, and repository URLs.
 Relationships to excluded projects are omitted and counted; export the whole workspace to retain
 cross-project relationships. Import previews the file, validates it, and creates separate projects.
 It never overwrites an existing key. For a single-project snapshot, supply a new key to import a copy.

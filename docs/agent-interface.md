@@ -1,4 +1,4 @@
-# Agent interface, version 2
+# Agent interface, version 3
 
 Agents with access to the user's computer can use the CLI to read and update a workspace.
 The UI does not need to be running. No browser automation, separate server, or API token is needed.
@@ -50,7 +50,6 @@ Then create a task using a file such as:
   "parent_id": "APP-0001",
   "title": "Verify the settings survive a restart",
   "description": "Check both themes with a fresh process.",
-  "effort": 2,
   "tags": {"area": "testing"}
 }
 ```
@@ -106,9 +105,11 @@ Never write it back. Updating `tags` or `tag_defaults` replaces that whole map; 
 unrelated pairs. Changing defaults increments the project's revision, not its descendants' revisions.
 If your decision depends on a default value, re-read the project before acting.
 
-Snapshot version 2 stores defaults and overrides separately. Import also accepts version 1 snapshots:
+Snapshot version 3 stores defaults and overrides separately and has no effort field. Import accepts
+version 1/2 snapshots and discards their old effort values. For version 1 snapshots:
 old project tags become null-valued defaults, and old work-item tags become null-valued local tags.
-Version 1 agents must update their payloads before using this version; array tag inputs are rejected.
+Version 1 agents must use tag objects instead of arrays. Version 2 agents must stop writing `effort`;
+it is rejected as an unknown field. Schema discovery reports API version 3, without an effort property.
 
 ## Link and exchange
 
@@ -125,10 +126,9 @@ not execute repository code, modify Git state, or create GitHub issues.
 
 ## Contract boundaries
 
-- Editable fields: `title`, `description`, `status`, `effort`, `tags`, `tag_defaults` (projects only), `color`, `blocked`, `parent_id`, `kind`, `repository_url`.
+- Editable fields: `title`, `description`, `status`, `tags`, `tag_defaults` (projects only), `color`, `blocked`, `parent_id`, `kind`, `repository_url`.
 - `project_key` is required on creation and immutable afterward. A project cannot become a task or vice versa.
 - `id`, `number`, timestamps, and revision are managed by the application.
-- Numeric effort is 1–5 or null; it is not allowed on projects or major goals.
 - Parent hierarchy must move toward a higher level within the same project. Skipped levels are allowed.
 - `blocks` is directional; `relates to` is undirected. Neither changes ownership or completion counts.
 - No direct SQL writes. They bypass validation, revision checks, and activity history.

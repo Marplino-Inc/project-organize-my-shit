@@ -50,7 +50,7 @@ def main(argv=None):
                 "immutable_on_update": ["project_key"],
                 "project_statuses": store.PROJECT_STATUSES,
                 "work_statuses": store.STATUSES,
-                "api_version": 2,
+                "api_version": 3,
             }
         else:
             store.initialize(args.db)

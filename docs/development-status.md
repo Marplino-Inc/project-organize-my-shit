@@ -1,5 +1,27 @@
 # Development status
 
+## v0.3.0 — project overview and simpler work cards
+
+Implemented from October 9 feedback: project-specific overview, card-body click targets, centered
+detail dialogs, footer-free cards, persistent condensed lanes, complete effort removal, and 24 palettes
+with persistent searchable pickers and one live preferences preview. Database v5 and snapshot/CLI v3
+remove effort, preserving old values in a pre-upgrade database backup and accepting old snapshots.
+
+The generic startup failure was reproduced as Windows error 10048: the previous background instance
+occupied the port. This is a supported explanation, not proof of the user's original underlying error.
+Startup now checks the port before migration, reuses matching instances, reports other conflicts and
+saves application output under the local data folder's logs directory.
+
+Validation: 90 pytest checks passed (including all 48 light/dark token sets and migration recovery),
+Ruff passed, and Chromium covered all 24 palettes in both modes, persistent picker/preview behavior,
+project overview content, card-padding clicks, centered dialog geometry, condensed persistence and
+keyboard opening, plus the existing CRUD, tags, exports and responsive flows. Condensed screenshot
+visually inspected. New visual changes await user review; this is not a full accessibility audit.
+
+The Windows source ZIP passed Start.cmd launch from a path with spaces, a repeated Start.ps1 launch
+reusing the same workspace, a different-workspace port conflict returning a logged diagnostic without
+creating its database, and full process restart with project and theme persistence.
+
 ## v0.2.0 — structured tags and theme library
 
 Implemented: name/value tags with explicit null, inherited project defaults, per-item overrides and

@@ -1,5 +1,7 @@
 """Local theme tokens, adapted from palette families. No external theme assets required."""
 
+from colorsys import hls_to_rgb
+
 FAMILIES = {
     "organize": {
         "name": "Organize",
@@ -158,6 +160,68 @@ TOKEN_NAMES = (
     "accent-soft",
     "button",
 )
+
+
+def tonal_palette(name, hue, saturation=0.45):
+    """Author related light/dark roles from a hue; contrast is checked separately."""
+
+    def color(lightness, chroma=saturation, offset=0):
+        rgb = hls_to_rgb(((hue + offset) % 360) / 360, lightness, chroma)
+        return "#" + "".join(f"{round(channel * 255):02x}" for channel in rgb)
+
+    return {
+        "name": name,
+        "description": f"{name} accents with coordinated light and dark surfaces.",
+        "source": "Original Organize tonal palette",
+        "url": "",
+        "colors": [color(0.48, 0.45, offset) for offset in (0, 65, 140, 210, 285)],
+        "light": [
+            color(0.97, 0.2),
+            color(0.995, 0.1),
+            color(0.94, 0.18),
+            color(0.16, 0.15),
+            color(0.34, 0.12),
+            color(0.82, 0.15),
+            color(0.30),
+            color(0.92, 0.22),
+            color(0.30),
+        ],
+        "dark": [
+            color(0.085, 0.18),
+            color(0.13, 0.17),
+            color(0.18, 0.16),
+            color(0.95, 0.12),
+            color(0.76, 0.12),
+            color(0.32, 0.16),
+            color(0.78),
+            color(0.21, 0.22),
+            color(0.30),
+        ],
+    }
+
+
+for key, name, hue, saturation in (
+    ("aubergine", "Aubergine", 290, 0.40),
+    ("ocean", "Ocean", 205, 0.50),
+    ("forest", "Forest", 140, 0.42),
+    ("rose", "Rose", 340, 0.48),
+    ("terracotta", "Terracotta", 18, 0.47),
+    ("saffron", "Saffron", 42, 0.52),
+    ("olive", "Olive", 74, 0.40),
+    ("lagoon", "Lagoon", 180, 0.46),
+    ("indigo", "Indigo", 240, 0.46),
+    ("lavender", "Lavender", 265, 0.34),
+    ("plum", "Plum", 310, 0.35),
+    ("cranberry", "Cranberry", 355, 0.48),
+    ("copper", "Copper", 28, 0.38),
+    ("sandstone", "Sandstone", 50, 0.25),
+    ("sage", "Sage", 105, 0.25),
+    ("eucalyptus", "Eucalyptus", 160, 0.30),
+    ("arctic", "Arctic", 195, 0.27),
+    ("slate", "Slate", 220, 0.17),
+    ("graphite", "Graphite", 250, 0.04),
+):
+    FAMILIES[key] = tonal_palette(name, hue, saturation)
 
 
 def css(family):
