@@ -24,9 +24,20 @@ try {
     if ($Demo) { $appArguments += '--demo' }
     if ($Database) { $appArguments += @('--db', $Database) }
     if ($NoBrowser) { $appArguments += '--no-browser' }
+    $logDirectory = Join-Path $env:LOCALAPPDATA 'ProjectOrganize/logs'
+    New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
+    $runLog = Join-Path $logDirectory ("startup-{0}-{1}.log" -f (Get-Date -Format 'yyyyMMdd-HHmmss'), $PID)
     Write-Host "Organize is opening at http://127.0.0.1:$Port. Keep this window open; press Ctrl+C to stop."
-    & $uvPath @appArguments
-    if ($LASTEXITCODE -ne 0) { throw 'The application stopped with an error.' }
+    Write-Host "Startup log: $runLog"
+    # Windows PowerShell treats native stderr as error records. Preserve it without
+    # replacing Python's actual exit code and diagnosis with a generic exception.
+    $previousPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        & $uvPath @appArguments 2>&1 | ForEach-Object { $_.ToString() } | Tee-Object -FilePath $runLog
+        $appExit = $LASTEXITCODE
+    } finally { $ErrorActionPreference = $previousPreference }
+    if ($appExit -ne 0) { throw "Organize exited with code $appExit. The cause is shown above and saved in $runLog" }
 } finally {
     Pop-Location
 }

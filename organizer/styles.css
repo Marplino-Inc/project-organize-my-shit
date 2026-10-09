@@ -82,15 +82,27 @@ body { background: var(--canvas) !important; color: var(--text) !important; font
 .tag-amber { background:#f9ecd4; color:#795415; }.tag-coral { background:#fae5e3; color:#974b45; }
 body.body--dark .tag-violet { background:#3c3159; color:#d4baff; }body.body--dark .tag-teal { background:#203f3a; color:#88dbbb; }
 body.body--dark .tag-amber { background:#443921; color:#efd093; }body.body--dark .tag-coral { background:#4b3036; color:#f7b0ac; }
-.ticket-footer { display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--line); margin-top:12px; padding-top:9px; color:var(--muted); font-size:11px; }
-.effort { font-weight:700; border:1px solid var(--line); padding:1px 6px; border-radius:5px; }
 .blocked { color:var(--negative); font-size:11px; display:flex; align-items:center; gap:5px; margin-top:9px; }
 .add-card { width:100%; color:var(--muted); font-size:12px; margin-top:8px; }
 .empty-column { color:var(--muted); border:1px dashed var(--line); border-radius:9px; padding:25px 12px; font-size:12px; text-align:center; }
 .empty-state { border:1px dashed var(--line); background:var(--surface); border-radius:16px; padding:44px 24px; text-align:center; display:flex; align-items:center; flex-direction:column; gap:14px; }
 .empty-state h2 { font-size:22px; font-weight:700; margin:0; }.empty-state p { color:var(--muted); max-width:450px; margin:0; }
 .dialog-card { background:var(--surface) !important; color:var(--text); width:680px; max-width:96vw !important; padding:28px; gap:17px; border-radius:16px !important; }
-.detail-card { width:640px; max-width:96vw !important; height:100%; max-height:100vh !important; border-radius:14px 0 0 14px !important; overflow-y:auto; }
+.detail-card { width:720px; max-width:96vw !important; max-height:90vh !important; overflow-y:auto; }
+.ticket-card { cursor:pointer; }
+.condensed-card { display:flex; align-items:center; gap:8px; padding:6px 9px; border-top-width:1px; border-left:3px solid var(--project-color); }
+.condensed-card .ticket-id { flex-shrink:0; font-size:10px; }
+.condensed-card .ticket-title { margin:0; min-height:30px; flex:1; min-width:0; font-size:12px; }
+.condensed-card .ticket-title .q-btn__content { white-space:normal; overflow-wrap:anywhere; }
+.condensed-board .board-column { padding:8px; min-height:160px; }
+.condensed-board .ticket-list { gap:5px; min-height:30px; }
+.condensed-board .empty-column { padding:12px 6px; }
+.project-overview { display:flex; flex-direction:column; gap:12px; margin-bottom:24px; }
+.project-heading { font-size:28px; font-weight:750; line-height:1.25; overflow-wrap:anywhere; }
+.project-description { white-space:pre-wrap; overflow-wrap:anywhere; font-size:14px; line-height:1.6; max-height:220px; overflow-y:auto; }
+.project-overview .stats { margin:4px 0 0; }
+.palette-preview { width:100%; display:flex; flex-direction:column; gap:12px; padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--canvas); }
+.palette-sample { display:flex; flex-direction:column; gap:8px; background:var(--surface); border-left:3px solid var(--accent); border-radius:8px; padding:14px; }
 .dialog-heading { font-size:22px; font-weight:750; line-height:1.3; margin:0; }
 .form-row { display:grid; grid-template-columns:1fr 1fr; gap:15px; width:100%; }
 .form-hint { font-size:12px; color:var(--muted); }

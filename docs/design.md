@@ -28,9 +28,9 @@ Cross-project links are separate rows, not additional parents.
 Completion counts committed leaf work once, using the hierarchy before any per-ticket dashboard filter.
 Cancelled work and descendants of cancelled parents are excluded; ideas are excluded. An undivided goal
 is itself leaf work. Goal/project acceptance status remains explicit. Count-based progress is not an effort
-or time estimate. Effort values are ordinal 1–5; T-shirt labels are another presentation of the same values.
+or time estimate. Effort estimates were removed in v0.3.0 at the primary user's request.
 
-Charts show matching item counts by status, type, tag, and effort. Tags may overlap. Project completion
+Charts show matching item counts by status, type, and tag. Tags may overlap. Project completion
 cards use the selected project scope; task filters affect the work views and charts, not those cards.
 
 ## Architecture
@@ -78,3 +78,20 @@ Palette references: [bslib theming](https://rstudio.github.io/bslib/articles/the
 [Google Material color roles](https://m3.material.io/styles/color/roles).
 These are adapted UI colors, not full library themes or claims of Material certification. Chart palette
 properties do not establish UI contrast; foreground/background pairs and rendered cards are checked separately.
+
+## v0.3.0 feedback decisions — 2026-10-09
+
+Explicit user direction: replace the selected project's summary with a project overview; enlarge card
+click targets; center details; offer ticket-number/title-only condensed lanes; remove the card footer
+and effort everywhere. Full cards retain tags and blockers; type remains in details, editors, filters
+and dashboards. Full is the initial density; the user can persistently switch to Condensed. Global
+appearance/share controls remain available in either workspace or project scope.
+
+Effort is removed from the item model and SQLite schema (version 5) after a pre-upgrade backup.
+Snapshot/agent contracts advance to version 3; v1/v2 snapshots import while discarding old estimates.
+
+Palette dropdowns remain mounted while CSS tokens update surfaces and accents. Work views redraw
+charts, and Preferences keeps a single live preview. The expanded catalog has 24 light/dark families,
+including 19 authored tonal palettes. This provides Slack-like variety, not a verified match to Slack's
+current inventory: its [official theme guide](https://slack.com/help/articles/205166337-Change-your-Slack-theme)
+does not publish a count. The specific count remains an implementation assumption pending user feedback.

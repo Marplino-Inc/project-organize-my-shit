@@ -2,10 +2,10 @@
 
 from html import escape
 
-from .store import EFFORT, effective_tags, now, progress, tag_text, ticket
+from .store import effective_tags, now, progress, tag_text, ticket
 
 
-def html_report(items, effort_scale="T-shirt"):
+def html_report(items):
     def esc(value):
         return escape(str(value), quote=True)
 
@@ -13,15 +13,10 @@ def html_report(items, effort_scale="T-shirt"):
     cards = []
     by_id = {x["id"]: x for x in items}
     for item in items:
-        effort = (
-            EFFORT[item["effort"]]
-            if effort_scale == "T-shirt" or item["effort"] is None
-            else str(item["effort"])
-        )
         parent = by_id.get(item["parent_id"])
         parent_text = f" · Under {esc(ticket(parent))}" if parent else ""
         cards.append(f"""<article><p class="meta">{esc(ticket(item))} · {esc(item["kind"])}{parent_text}</p>
-            <h2>{esc(item["title"])}</h2><p>{esc(item["status"])} · Effort: {effort}</p>
+            <h2>{esc(item["title"])}</h2><p>{esc(item["status"])}</p>
             <p class="description">{esc(item["description"])}</p>
             {('<p>Repository: <a href="' + esc(item["repository_url"]) + '">' + esc(item["repository_url"]) + "</a></p>") if item["repository_url"] else ""}
             <p>{" · ".join(esc(tag_text(name, value)) for name, value in effective_tags(item, items).items())}</p>

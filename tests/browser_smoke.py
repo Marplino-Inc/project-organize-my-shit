@@ -100,6 +100,7 @@ def main():
 
                     for family, theme in themes.FAMILIES.items():
                         page.get_by_label("Palette", exact=True).click()
+                        page.get_by_label("Palette", exact=True).fill(theme["name"])
                         page.get_by_role("option", name=theme["name"], exact=True).click()
                         page.wait_for_function(
                             "color => getComputedStyle(document.body).getPropertyValue('--canvas').trim() === color",
@@ -120,12 +121,29 @@ def main():
                         expect(page.get_by_label("Palette", exact=True)).to_have_value(theme["name"])
                         assert store.setting(db, "palette", "organize") == family
                     page.get_by_role("button", name="Light", exact=True).click()
+                    page.get_by_label("Palette", exact=True).fill("Material Blue")
+                    page.get_by_role("option", name="Material Blue", exact=True).click()
+
+                    # The preferences picker and preview survive selection; project context is retained.
+                    page.get_by_role("button", name="Preferences", exact=True).click()
+                    picker = page.get_by_label("Theme palette", exact=True)
+                    picker_id = picker.get_attribute("id")
+                    picker.fill("Ocean")
+                    page.get_by_role("option", name="Ocean", exact=True).click()
+                    expect(page.locator(".palette-preview").get_by_text("Ocean", exact=True)).to_be_visible()
+                    assert picker.get_attribute("id") == picker_id
+                    picker.fill("Material Blue")
+                    page.get_by_role("option", name="Material Blue", exact=True).click()
+                    page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
 
                     # Create a project with a repository and an independent lifecycle.
                     page.get_by_role("button", name="New project", exact=True).last.click()
                     dialog = page.get_by_role("dialog")
                     dialog.get_by_label("Title", exact=True).fill("Browser-tested project")
                     dialog.get_by_label("Project key", exact=True).fill("WEB")
+                    dialog.get_by_label("Description", exact=True).fill(
+                        "A focused overview of the browser project."
+                    )
                     dialog.get_by_label("Repository URL (optional)", exact=True).fill(
                         "https://github.com/example/browser"
                     )
@@ -146,6 +164,12 @@ def main():
                     expect(page.get_by_role("link", name="Open repository")).to_have_attribute(
                         "href", "https://github.com/example/browser"
                     )
+                    expect(page.locator(".project-heading")).to_have_text("Browser-tested project")
+                    expect(page.locator(".project-description")).to_have_text(
+                        "A focused overview of the browser project."
+                    )
+                    expect(page.get_by_text("Projects in scope", exact=True)).to_have_count(0)
+                    expect(page.get_by_label("Project stage", exact=True)).to_have_count(0)
 
                     # Create a task and edit its content.
                     page.get_by_role("button", name="New item", exact=True).click()
@@ -165,7 +189,12 @@ def main():
                     expect(card).to_be_visible()
                     expect(card.get_by_text("owner: (null)", exact=True)).to_be_visible()
                     expect(card.get_by_text("release: (null)", exact=True)).to_be_visible()
-                    card.get_by_role("button", name="Build a colorful card", exact=True).click()
+                    expect(card.locator(".ticket-footer")).to_have_count(0)
+                    card.click(position={"x": 5, "y": 35})
+                    expect(page.locator(".detail-card")).to_be_visible()
+                    bounds = page.locator(".detail-card").bounding_box()
+                    assert abs(bounds["x"] + bounds["width"] / 2 - 720) < 5
+                    assert abs(bounds["y"] + bounds["height"] / 2 - 540) < 5
                     expect(page.get_by_text("Detailed notes\nSecond line", exact=True)).to_be_visible()
                     page.get_by_role("button", name="Edit item", exact=True).click()
                     dialog = page.get_by_role("dialog")
@@ -288,11 +317,28 @@ def main():
                     expect(page.get_by_role("dialog")).to_have_count(0)
                     expect(page.locator(".project-card")).to_have_count(5)
                     page.get_by_role("button", name="Preferences", exact=True).click()
-                    page.get_by_role("dialog").get_by_role("button", name="1–5", exact=True).click()
+                    expect(page.get_by_role("dialog").get_by_text("Effort labels", exact=True)).to_have_count(
+                        0
+                    )
                     page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
-                    assert store.setting(db, "effort_scale") == "1–5"
                     page.get_by_role("button", name="Board", exact=True).click()
                     expect(page.locator(".ticket-card")).to_have_count(14)
+                    full_height = page.locator(".ticket-card").first.bounding_box()["height"]
+                    page.get_by_role("switch", name="Condensed view", exact=True).click()
+                    expect(page.locator(".condensed-card")).to_have_count(14)
+                    expect(
+                        page.locator(
+                            ".ticket-card .tags, .ticket-card .ticket-context, .ticket-card .ticket-footer"
+                        )
+                    ).to_have_count(0)
+                    assert page.locator(".ticket-card").first.bounding_box()["height"] < full_height
+                    page.reload()
+                    expect(page.locator(".condensed-card")).to_have_count(14)
+                    expect(page.get_by_role("switch", name="Condensed view", exact=True)).to_be_checked()
+                    page.locator(".condensed-card .ticket-title").first.press("Enter")
+                    expect(page.locator(".detail-card")).to_be_visible()
+                    page.get_by_role("button", name="Close details", exact=True).click()
+                    page.screenshot(path=str(artifacts / "board-condensed.png"), full_page=True)
                     page.set_viewport_size({"width": 390, "height": 844})
                     page.screenshot(path=str(artifacts / "board-mobile.png"), full_page=True)
                     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), (

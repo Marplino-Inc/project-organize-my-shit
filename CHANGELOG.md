@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0
+
+- Selected projects get a dedicated overview with description, lifecycle, repository, effective tags and progress.
+- Click card bodies to open centered details; remove the card footer and add persistent condensed lanes.
+- Remove effort from forms, cards, dashboards, reports, SQLite storage and the agent interface.
+- Expand to 24 palette families with searchable dropdowns and an in-place preferences preview.
+- Reuse matching running instances; diagnose port conflicts before migration and preserve startup logs.
+- Database v5 migration backs up the old database. CLI/snapshots use v3; v1/v2 snapshots still import.
+
 ## 0.2.0
 
 - Name/value tags with explicit nulls, dynamically inherited project default sets, per-item overrides,
