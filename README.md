@@ -31,6 +31,14 @@ uv run --no-dev python main.py --demo --port 8766
 Demo edits persist separately from your own projects. This is a source-based application,
 not a standalone executable or signed Windows installer. See the [v0.4.0 release notes](docs/releases/v0.4.0.md).
 
+## Local updates and browser refresh
+
+After updated files are installed locally and the app is restarted, an open browser reconnects and
+refreshes automatically. A GitHub push alone does not update your local files; the app does not download
+updates itself. Save or close editors before updating. An open edited form triggers the browser's
+reload warning; choosing to stay keeps the text available to copy, but does not save a draft or restore
+the old server session. Saved projects remain in the separate local database.
+
 ## What is included
 
 - 24 palettes, each with light and dark appearance, remembered between launches.

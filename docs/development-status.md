@@ -1,5 +1,25 @@
 # Development status
 
+## v0.4.0 ? focused workspace and local restart refresh
+
+Removed Outline, Map and Dashboard, keeping the board and project overview. Main content fills the
+browser width; the sidebar collapses persistently, and Home and Preferences remain in the toolbar.
+Palette selection is a non-editable Preferences dropdown with source above the accepted preview;
+the toolbar offers Light/Dark only. Existing links and records remain; database/API versions are unchanged.
+Product scope guidance now favors a small core workflow and coherent updates without renumbering history.
+
+Validation: 90 pytest checks and Ruff passed. Chromium exercised all 48 palette/mode combinations,
+source placement, persistent non-editable selection, removed navigation, Home, keyboard sidebar collapse,
+full-width layout at 2560px and mobile overflow, plus the existing CRUD, tag, export and stale-edit flows.
+Preferences and collapsed-wide screenshots were inspected. This is automated evidence, not user acceptance
+or a full accessibility audit.
+
+The Windows source ZIP passed clean extraction, Start.cmd from a path with spaces, duplicate launch,
+port conflict diagnostics, saved project/theme persistence, automatic refresh of an already-open browser
+after restart, and a native beforeunload warning retaining an edited title when dismissed. NiceGUI supplies
+the reconnect/reload; no GitHub updater or file watcher was added. Save/close forms before updating;
+the warning preserves text for copying, not a draft or a usable session on the restarted server.
+
 ## v0.3.0 — project overview and simpler work cards
 
 Implemented from October 9 feedback: project-specific overview, card-body click targets, centered

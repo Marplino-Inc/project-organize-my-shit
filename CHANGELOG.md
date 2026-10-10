@@ -2,6 +2,8 @@
 
 ## 0.4.0
 
+- Warn before a restart reload discards an edited form; verify local browser reconnect and saved data persistence.
+
 - Focus on one board: remove Outline, Map and Dashboard without deleting their underlying records.
 - Collapsible sidebar, top-right Home/Preferences access, and a full-width main panel.
 - Non-editable palette dropdown only in Preferences, with source attribution above the unchanged preview.
