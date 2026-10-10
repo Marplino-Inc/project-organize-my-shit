@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0
+
+- Focus on one board: remove Outline, Map and Dashboard without deleting their underlying records.
+- Collapsible sidebar, top-right Home/Preferences access, and a full-width main panel.
+- Non-editable palette dropdown only in Preferences, with source attribution above the unchanged preview.
+- Light/Dark toolbar controls; former System preferences start in Light.
+- Product development guidance now favors a small core workflow and coherent incremental updates.
+
 ## 0.3.0
 
 - Selected projects get a dedicated overview with description, lifecycle, repository, effective tags and progress.

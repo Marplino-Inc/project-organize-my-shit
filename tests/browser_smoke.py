@@ -91,17 +91,22 @@ def main():
                     expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
                     check_card_contrast(page)
                     page.screenshot(path=str(artifacts / "board-dark.png"), full_page=True)
-                    page.get_by_role("button", name="System", exact=True).click()
-                    page.emulate_media(color_scheme="light")
-                    expect(page.locator("body")).to_have_class(re.compile(r"\bbody--light\b"))
-                    page.emulate_media(color_scheme="dark")
-                    expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
-                    page.get_by_role("button", name="Light", exact=True).click()
-
                     for family, theme in themes.FAMILIES.items():
-                        page.get_by_label("Palette", exact=True).click()
-                        page.get_by_label("Palette", exact=True).fill(theme["name"])
+                        page.get_by_role("button", name="Preferences", exact=True).click()
+                        picker = page.get_by_label("Theme palette", exact=True)
+                        picker_id = picker.get_attribute("id")
+                        expect(picker).to_have_attribute("readonly", "")
+                        picker.click()
                         page.get_by_role("option", name=theme["name"], exact=True).click()
+                        expect(page.locator(".palette-source")).to_contain_text(theme["source"])
+                        assert picker.get_attribute("id") == picker_id
+                        assert (
+                            page.locator(".palette-source").bounding_box()["y"]
+                            < page.locator(".palette-preview").bounding_box()["y"]
+                        )
+                        if theme["url"]:
+                            expect(page.locator(".palette-source a")).to_have_attribute("href", theme["url"])
+                        page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
                         page.wait_for_function(
                             "color => getComputedStyle(document.body).getPropertyValue('--canvas').trim() === color",
                             arg=theme["dark"][0]
@@ -118,22 +123,18 @@ def main():
                                 path=str(artifacts / f"theme-{family}-{mode.lower()}.png"), full_page=True
                             )
                         page.reload()
-                        expect(page.get_by_label("Palette", exact=True)).to_have_value(theme["name"])
                         assert store.setting(db, "palette", "organize") == family
                     page.get_by_role("button", name="Light", exact=True).click()
-                    page.get_by_label("Palette", exact=True).fill("Material Blue")
-                    page.get_by_role("option", name="Material Blue", exact=True).click()
-
-                    # The preferences picker and preview survive selection; project context is retained.
+                    expect(page.get_by_label("Palette", exact=True)).to_have_count(0)
+                    expect(page.get_by_role("button", name="System", exact=True)).to_have_count(0)
                     page.get_by_role("button", name="Preferences", exact=True).click()
-                    picker = page.get_by_label("Theme palette", exact=True)
-                    picker_id = picker.get_attribute("id")
-                    picker.fill("Ocean")
-                    page.get_by_role("option", name="Ocean", exact=True).click()
-                    expect(page.locator(".palette-preview").get_by_text("Ocean", exact=True)).to_be_visible()
-                    assert picker.get_attribute("id") == picker_id
-                    picker.fill("Material Blue")
+                    page.get_by_label("Theme palette", exact=True).click()
                     page.get_by_role("option", name="Material Blue", exact=True).click()
+                    expect(page.locator(".palette-source")).to_contain_text("Google Material 3")
+                    expect(page.locator(".palette-sample")).to_contain_text(
+                        "A clearer view of your next step"
+                    )
+                    page.screenshot(path=str(artifacts / "preferences-source.png"), full_page=True)
                     page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
 
                     # Create a project with a repository and an independent lifecycle.
@@ -258,7 +259,7 @@ def main():
                         timeout=7000
                     )
 
-                    # Search, map, outline, dashboard, and exports.
+                    # Core board search, tags, removed navigation, and exports.
                     page.get_by_role("button", name="My workspace", exact=True).click()
                     page.get_by_label("Search work", exact=True).fill("tooltip")
                     expect(page.locator(".ticket-card")).to_have_count(1)
@@ -270,22 +271,8 @@ def main():
                     expect(page.locator(".ticket-card")).to_have_count(1)
                     page.get_by_role("button", name="Clear", exact=True).last.click()
                     expect(page.locator(".ticket-card")).to_have_count(13)
-                    page.get_by_role("button", name="Map", exact=True).click()
-                    expect(page.locator(".graph-shell svg")).to_be_visible()
-                    page.locator(".graph-shell svg text").filter(has_text="ORG-0001").click()
-                    expect(
-                        page.get_by_role("dialog").get_by_text("A calmer project workspace", exact=True)
-                    ).to_be_visible()
-                    page.get_by_role("button", name="Close details", exact=True).click()
-                    page.locator(".q-notification").evaluate_all(
-                        "nodes => nodes.forEach(node => node.style.visibility = 'hidden')"
-                    )
-                    page.screenshot(path=str(artifacts / "map-light.png"), full_page=True)
-                    page.get_by_role("button", name="Outline", exact=True).click()
-                    expect(page.locator(".outline-row")).to_have_count(17)
-                    page.get_by_role("button", name="Dashboard", exact=True).click()
-                    expect(page.get_by_text("Work by status", exact=True)).to_be_visible()
-                    page.screenshot(path=str(artifacts / "dashboard-light.png"), full_page=True)
+                    for removed in ("Outline", "Map", "Dashboard"):
+                        expect(page.get_by_role("button", name=removed, exact=True)).to_have_count(0)
                     page.get_by_role("button", name="Share", exact=True).click()
                     with page.expect_download() as download:
                         page.get_by_role("button", name="Export project snapshot", exact=True).click()
@@ -321,7 +308,6 @@ def main():
                         0
                     )
                     page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
-                    page.get_by_role("button", name="Board", exact=True).click()
                     expect(page.locator(".ticket-card")).to_have_count(14)
                     full_height = page.locator(".ticket-card").first.bounding_box()["height"]
                     page.get_by_role("switch", name="Condensed view", exact=True).click()
@@ -339,6 +325,35 @@ def main():
                     expect(page.locator(".detail-card")).to_be_visible()
                     page.get_by_role("button", name="Close details", exact=True).click()
                     page.screenshot(path=str(artifacts / "board-condensed.png"), full_page=True)
+                    # The main panel reaches the right edge even on an ultrawide display.
+                    page.set_viewport_size({"width": 2560, "height": 1080})
+                    panel = page.locator("main.main")
+                    bounds = panel.bounding_box()
+                    assert abs(bounds["x"] + bounds["width"] - 2560) < 2
+                    expanded_width = bounds["width"]
+                    page.locator(".project-card").filter(has_text="WEB-0001").get_by_role(
+                        "button", name="Browser-tested project", exact=True
+                    ).click()
+                    expect(page.locator(".project-overview")).to_be_visible()
+                    page.get_by_role("button", name="Toggle sidebar", exact=True).click()
+                    expect(page.locator("aside.sidebar")).not_to_be_visible()
+                    expect(page.get_by_role("button", name="Toggle sidebar", exact=True)).to_have_attribute(
+                        "aria-expanded", "false"
+                    )
+                    assert panel.bounding_box()["width"] > expanded_width
+                    assert abs(panel.bounding_box()["width"] - 2560) < 2
+                    page.get_by_role("button", name="Home", exact=True).click()
+                    expect(page.locator(".project-overview")).to_have_count(0)
+                    expect(page.locator(".project-card")).to_have_count(5)
+                    page.reload()
+                    expect(page.locator("aside.sidebar")).not_to_be_visible()
+                    page.get_by_role("button", name="Preferences", exact=True).click()
+                    expect(page.locator(".palette-preview")).to_be_visible()
+                    page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
+                    expect(page.get_by_role("dialog")).to_have_count(0)
+                    page.screenshot(path=str(artifacts / "board-wide-collapsed.png"), full_page=True)
+                    page.get_by_role("button", name="Toggle sidebar", exact=True).press("Enter")
+                    expect(page.locator("aside.sidebar")).to_be_visible()
                     page.set_viewport_size({"width": 390, "height": 844})
                     page.screenshot(path=str(artifacts / "board-mobile.png"), full_page=True)
                     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), (
@@ -351,7 +366,7 @@ def main():
                     json.dumps(
                         {
                             "ok": True,
-                            "checks": "themes, project lifecycle, repository, CRUD, drag/menu status, optimistic edits, agent refresh, filters, views, exports, responsive layout, offline assets",
+                            "checks": "themes, project lifecycle, repository, CRUD, drag/menu status, optimistic edits, agent refresh, filters, board-only navigation, palette sources, sidebar collapse, Home, exports, ultrawide/mobile layout, offline assets",
                             "screenshots": str(artifacts),
                         }
                     )

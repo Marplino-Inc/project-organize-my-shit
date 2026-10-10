@@ -149,20 +149,25 @@ def main():
                     ).to_be_visible()
                     page.get_by_role("button", name="Dark", exact=True).click()
                     expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
-                    page.get_by_label("Palette", exact=True).click()
+                    page.get_by_role("button", name="Preferences", exact=True).click()
+                    page.get_by_label("Theme palette", exact=True).click()
                     page.get_by_role("option", name="Shiny Mint", exact=True).click()
                     page.wait_for_function(
                         "getComputedStyle(document.body).getPropertyValue('--canvas').trim() === '#19231f'"
                     )
+                    page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
                     # Verify the preference write completed before terminating the process.
                     page.reload()
                     expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
-                    page.close()
+                    browser.close()
                     stop(process)
                     process = start()
+                    browser = p.chromium.launch()
                     page = browser.new_page()
                     page.goto(url)
-                    expect(page.get_by_label("Palette", exact=True)).to_have_value("Shiny Mint")
+                    page.get_by_role("button", name="Preferences", exact=True).click()
+                    expect(page.get_by_label("Theme palette", exact=True)).to_have_value("Shiny Mint")
+                    page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
                     expect(
                         page.locator(".project-card").get_by_role(
                             "button", name="Release persistence check", exact=True
@@ -181,7 +186,7 @@ def main():
             {
                 "ok": True,
                 "archive": str(args.archive),
-                "checks": "clean archive, Start.cmd from a path with spaces, first project, full process restart, theme/data persistence",
+                "checks": "clean archive, Start.cmd, duplicate launch, port conflict, process restart, theme/data persistence",
             }
         )
     )

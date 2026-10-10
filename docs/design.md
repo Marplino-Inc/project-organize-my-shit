@@ -7,13 +7,16 @@ warm off-white canvas and white cards; dark mode uses slate surfaces and brighte
 Keep titles neutral and readable. Project accent colors belong on borders, dots, and progress bars.
 Named tag pills and status labels supplement color. All drag actions have a menu alternative.
 
-Themes are Light / Dark / System and persist in SQLite. System follows the browser's OS preference.
+Themes are Light / Dark and persist in SQLite. Palette selection lives in Preferences, with source
+attribution above the preview. The main toolbar contains only the appearance toggle.
 Use bundled icons, local assets, and system fonts. Avoid remote font or script requests.
 Honor reduced-motion preferences and visible focus outlines. Small screens scroll the board itself,
 not the whole page; the desktop layout remains the primary target.
 
-The main views show the same records: Board (daily flow), Outline (hierarchy), Map (connections),
-and Dashboard (summaries). Card titles open detailed panels; descriptions stay out of the dense board.
+The board is the single work view; selecting a project shows its overview above the work items.
+Outline, Map and Dashboard were removed in v0.4.0 to keep the daily workflow focused. Cards open centered
+details; descriptions stay out of the dense board. The main panel fills the browser width, with a
+persistent collapsible sidebar and a toolbar Home button. See [product scope](product-scope.md).
 
 ## Model and reporting
 
