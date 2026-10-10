@@ -1126,11 +1126,11 @@ def register(path, demo=False):
                     ui.button("New item", icon="add", on_click=edit_dialog).classes("primary-button")
                 with ui.element("div").classes("filters"):
                     ui.select(
-                        feature_options(),
+                        {"": "All work", **feature_options()},
                         label="Feature",
-                        value=state["feature"],
-                        on_change=lambda e: change_filter("feature", e.value),
-                    ).props("outlined dense clearable placeholder='All work'").classes("w-48")
+                        value=state["feature"] or "",
+                        on_change=lambda e: change_filter("feature", e.value or None),
+                    ).props("outlined dense").classes("w-48")
                     search = (
                         ui.input(
                             "Search work",

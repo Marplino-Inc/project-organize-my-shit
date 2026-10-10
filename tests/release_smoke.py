@@ -203,7 +203,9 @@ def main():
                     # A dirty editor must get a native warning, not silently disappear on restart.
                     page.get_by_role("button", name="New project", exact=True).last.click()
                     page.get_by_role("dialog").get_by_label("Title", exact=True).fill("Unsaved restart check")
-                    with page.expect_event("dialog", timeout=20000) as warning:
+                    page.wait_for_function("""window.did_handshake === true &&
+                        document.querySelector('.item-editor[data-unsaved="true"]') !== null""")
+                    with page.expect_event("dialog", timeout=45000) as warning:
                         stop(process)
                         process = start()
                     assert warning.value.type == "beforeunload"

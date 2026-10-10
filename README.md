@@ -79,7 +79,7 @@ editor, select zero, one or several **Features**. The same task appears under ea
 its status, identity and project completion count remain shared. Features do not change parents or
 create another hierarchy. Membership is explicit on each work item, without automatic child inheritance.
 
-Use the **Feature** dropdown above the board to narrow the work shown; clear it for all work. New items
+Use the **Feature** dropdown above the board to narrow the work shown; choose **All work** to see everything. New items
 created while a feature is selected start with that feature selected. Full cards show feature badges;
 condensed cards stay ticket-number/title only, with memberships available in details. Renaming a feature
 preserves assignments. Unassign it from all work items, including cancelled ones, before removing it.

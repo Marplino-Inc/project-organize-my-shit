@@ -1,5 +1,26 @@
 # Development status
 
+## v0.6.0 ? overlapping project Features
+
+Implemented Features with names/descriptions on projects, optional multiple memberships on work items,
+full-card/detail badges, and a selector on the existing board. Condensed cards remain unchanged. New
+work preselects the current Feature and its project, including from the workspace-wide view. Rename
+preserves membership; deleting an assigned Feature is rejected. Parent relationships and ticket IDs
+are unchanged and progress counts each work item once.
+
+Database v6 adds JSON definitions/memberships after a pre-upgrade backup. Snapshot v4 imports versions
+1?3; reports include escaped Feature names/descriptions. Agent contract v5 exposes definitions,
+memberships and computed names through the existing revision-checked CLI.
+
+Validation: 110 pytest checks and Ruff passed, including migration backup/idempotence, round trips,
+invalid-reference rollback, shared memberships/counting, rename, deletion safeguards and report escaping.
+The dedicated Chromium workflow covered definition editing, multi-selection, both membership views,
+creation preselection, rename, compact/detail presentation, external changes and filter recovery after
+removal. The existing full browser suite passed all 48 themes and CRUD/export/responsive checks.
+Light/dark Feature screenshots were inspected. Windows source-package checks covered launching,
+restart/reconnect, saved Feature definitions, theme/border persistence and the unsaved-editor warning.
+These are automated checks; user acceptance and long-term daily-use evidence remain separate.
+
 ## v0.5.0 ? field visibility, compact lanes and project-key renaming
 
 Implemented the October 10 annotated screenshot feedback: darker field/dropdown surfaces, a persistent
