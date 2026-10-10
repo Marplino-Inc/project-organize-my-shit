@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0
+
+- Darker text-field/dropdown backgrounds and a persistent 1?4 px field-border slider in Preferences.
+- Empty board lanes stay compact, with their message and Add item near the heading.
+- Rename a project key from the UI or CLI; update all work items atomically while retaining identities, links and history.
+- Agent contract v4 documents renaming and revision changes; database v5 and snapshot v3 are unchanged.
+
 ## 0.4.0
 
 - Warn before a restart reload discards an edited form; verify local browser reconnect and saved data persistence.

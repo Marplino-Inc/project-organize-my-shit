@@ -294,16 +294,34 @@ def save(path, fields, item_id=None, revision=None, actor="You"):
         raise ValueError("Unknown or read-only fields: " + ", ".join(sorted(set(fields) - editable)))
     if not actor.strip() or len(actor) > 100:
         raise ValueError("Actor must contain 1–100 characters.")
+    if "project_key" in fields:
+        if not isinstance(fields["project_key"], str):
+            raise ValueError("Project key must be a string.")
+        fields = {**fields, "project_key": fields["project_key"].strip().upper()}
     with transaction(path) as db:
         items = read_items(db)
         existing = next((x for x in items if x["id"] == item_id), None)
         if item_id and (existing is None or existing["revision"] != revision):
             raise ValueError("This item changed in another window. Close and reopen it before saving.")
         stamp = now()
+        renamed = []
         if existing:
             if "project_key" in fields and fields["project_key"] != existing["project_key"]:
-                raise ValueError("Project keys cannot change on update.")
-            fixed = {key: existing[key] for key in ("id", "project_key", "number", "created_at")}
+                if existing["kind"] != "Project":
+                    raise ValueError("Change the project key on the project, not an individual work item.")
+                if any(x["project_key"] == fields["project_key"] for x in items):
+                    raise ValueError("That project key is already in use. Choose another.")
+                renamed = [
+                    {
+                        **x,
+                        "project_key": fields["project_key"],
+                        "revision": x["revision"] + 1,
+                        "updated_at": stamp,
+                    }
+                    for x in items
+                    if x["project_key"] == existing["project_key"] and x["id"] != item_id
+                ]
+            fixed = {key: existing[key] for key in ("id", "number", "created_at")}
             item = {**existing, **fields, **fixed, "updated_at": stamp, "revision": revision + 1}
             if fields.get("kind", existing["kind"]) == "Project" and existing["kind"] != "Project":
                 raise ValueError("Create a new project using New project.")
@@ -331,9 +349,19 @@ def save(path, fields, item_id=None, revision=None, actor="You"):
             ).model_dump()
         item = Item.model_validate(item).model_dump()
         item["title"] = item["title"].strip()
-        combined = [x for x in items if x["id"] != item["id"]] + [item]
+        renamed_by_id = {x["id"]: x for x in renamed}
+        combined = [renamed_by_id.get(x["id"], x) for x in items if x["id"] != item["id"]] + [item]
         links = [dict(row) for row in db.execute("SELECT * FROM links")]
         validate_graph(combined, links)
+        for child in renamed:
+            db.execute(
+                "UPDATE items SET project_key=?, revision=?, updated_at=? WHERE id=?",
+                (child["project_key"], child["revision"], stamp, child["id"]),
+            )
+            db.execute(
+                "INSERT INTO activity(item_id, actor, action, timestamp, fields) VALUES (?, ?, ?, ?, ?)",
+                (child["id"], actor, "project renamed", stamp, json.dumps(["project_key"])),
+            )
         if existing:
             row = {**item, "tags": json.dumps(item["tags"]), "tag_defaults": json.dumps(item["tag_defaults"])}
             db.execute(

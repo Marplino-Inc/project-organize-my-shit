@@ -17,6 +17,7 @@ from playwright.sync_api import expect, sync_playwright
 
 from organizer import store, themes
 from organizer.demo import seed
+from tests.test_tags_themes import contrast
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -35,6 +36,86 @@ def check_card_contrast(page):
     values = sorted(luminance(value) for value in colors.values())
     ratio = (values[1] + 0.05) / (values[0] + 0.05)
     assert ratio >= 4.5, f"Card title contrast too low: {ratio:.2f}:1"
+
+
+def check_field_contrast(page):
+    values = page.get_by_label("Search work", exact=True).evaluate("""input => {
+        const color = value => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = value; ctx.fillRect(0, 0, 1, 1);
+            return '#' + [...ctx.getImageData(0, 0, 1, 1).data].slice(0, 3)
+                .map(x => x.toString(16).padStart(2, '0')).join('');
+        };
+        const field = input.closest('.q-field');
+        return {
+            canvas: color(getComputedStyle(document.body).backgroundColor),
+            background: color(getComputedStyle(field.querySelector('.q-field__control')).backgroundColor),
+            text: color(getComputedStyle(input).color),
+            label: color(getComputedStyle(field.querySelector('.q-field__label')).color),
+        };
+    }""")
+    for i in (1, 3, 5):
+        assert int(values["background"][i : i + 2], 16) < int(values["canvas"][i : i + 2], 16)
+    for role in ("text", "label"):
+        assert contrast(values[role], values["background"]) >= 4.5, values
+
+
+def check_field_preferences_and_rename(page, db, artifacts):
+    page.set_viewport_size({"width": 1600, "height": 1000})
+    page.get_by_role("button", name="Preferences", exact=True).click()
+    slider = page.get_by_role("slider", name="Field border thickness", exact=True)
+    for _ in range(3):
+        slider.locator("[tabindex]").press("ArrowRight")
+    expect(slider).to_have_attribute("aria-valuenow", "4")
+    control = (
+        page.get_by_label("Theme palette", exact=True)
+        .locator("xpath=ancestor::label")
+        .locator(".q-field__control")
+    )
+    page.wait_for_function(
+        "getComputedStyle(document.querySelector('.q-field__control'), ':before').borderTopWidth === '4px'"
+    )
+    assert control.evaluate("el => getComputedStyle(el, ':before').borderTopWidth") == "4px"
+    page.screenshot(path=str(artifacts / "field-preferences.png"), full_page=True)
+    page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
+    page.reload()
+    page.wait_for_function(
+        "getComputedStyle(document.querySelector('.q-field__control'), ':before').borderTopWidth === '4px'"
+    )
+    assert store.setting(db, "field_border_width") == "4"
+    page.locator(".project-card").filter(has_text="WEB-0001").get_by_role(
+        "button", name="Browser-tested project", exact=True
+    ).click()
+    page.get_by_role("button", name="Edit project", exact=True).click()
+    page.get_by_role("dialog").get_by_label("Project key", exact=True).fill("RENAMED")
+    page.get_by_role("button", name="Save project", exact=True).click()
+    expect(page.get_by_role("dialog")).to_have_count(0)
+    expect(page.locator(".project-overview")).to_contain_text("RENAMED")
+    expect(page.locator(".ticket-id").first).to_contain_text("RENAMED-")
+    roots = store.load(db)[0]
+    root = next(x for x in roots if x["kind"] == "Project" and x["project_key"] == "RENAMED")
+    store.save(db, {"project_key": "WEB"}, root["id"], root["revision"], actor="Browser test")
+    expect(page.locator(".project-overview")).to_contain_text("WEB", timeout=10000)
+    for mode in ("Light", "Dark"):
+        page.get_by_role("button", name=mode, exact=True).click()
+        for condensed in (False, True):
+            density = page.get_by_role("switch", name="Condensed view", exact=True)
+            if density.get_attribute("aria-checked") != str(condensed).lower():
+                density.click()
+            expect(density).to_have_attribute("aria-checked", str(condensed).lower())
+            expect(page.locator(".condensed-board")).to_have_count(1 if condensed else 0)
+            empty = page.locator(".empty-lane").first
+            expect(empty).to_be_visible()
+            bounds = empty.bounding_box()
+            assert bounds["height"] < 180, bounds
+            message = empty.locator(".empty-column").bounding_box()
+            assert message["y"] - bounds["y"] < 65, (bounds, message)
+            assert (
+                empty.get_by_role("button", name="Add item", exact=True).bounding_box()["y"] - bounds["y"]
+                < 125
+            )
+            page.screenshot(path=str(artifacts / f"compact-empty-{mode}-{condensed}.png"), full_page=True)
 
 
 def main():
@@ -100,10 +181,12 @@ def main():
                         page.get_by_role("option", name=theme["name"], exact=True).click()
                         expect(page.locator(".palette-source")).to_contain_text(theme["source"])
                         assert picker.get_attribute("id") == picker_id
-                        assert (
-                            page.locator(".palette-source").bounding_box()["y"]
-                            < page.locator(".palette-preview").bounding_box()["y"]
-                        )
+                        page.wait_for_function("""() => {
+                            const source = document.querySelector('.palette-source');
+                            const preview = document.querySelector('.palette-preview');
+                            return source?.getClientRects().length && preview?.getClientRects().length
+                                && source.getBoundingClientRect().y < preview.getBoundingClientRect().y;
+                        }""")
                         if theme["url"]:
                             expect(page.locator(".palette-source a")).to_have_attribute("href", theme["url"])
                         page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
@@ -119,6 +202,7 @@ def main():
                                 re.compile(r"\bbody--" + mode.lower() + r"\b")
                             )
                             check_card_contrast(page)
+                            check_field_contrast(page)
                             page.screenshot(
                                 path=str(artifacts / f"theme-{family}-{mode.lower()}.png"), full_page=True
                             )
@@ -359,6 +443,7 @@ def main():
                     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), (
                         "Page overflows horizontally"
                     )
+                    check_field_preferences_and_rename(page, db, artifacts)
                     assert not errors, errors
                     assert not external_requests, external_requests
                     browser.close()

@@ -36,6 +36,13 @@ def register(path, demo=False):
         if palette not in themes.FAMILIES:
             palette = "organize"
         appearance = {"palette": palette}
+        try:
+            border_width = max(1, min(4, int(store.setting(path, "field_border_width", "1"))))
+        except ValueError:
+            border_width = 1
+        field_style = ui.html(
+            f"<style>body {{ --field-border-width:{border_width}px; }}</style>", sanitize=False
+        ).classes("hidden")
         theme_style = ui.html("<style>" + themes.css(palette) + "</style>", sanitize=False).classes("hidden")
         state = {
             "project": None,
@@ -58,7 +65,15 @@ def register(path, demo=False):
             )
 
         def refresh():
+            selected = next(
+                (x for x in data["items"] if x["kind"] == "Project" and x["project_key"] == state["project"]),
+                None,
+            )
             data["items"], data["links"] = store.load(path)
+            if selected:
+                state["project"] = next(
+                    (x["project_key"] for x in data["items"] if x["id"] == selected["id"]), None
+                )
             state["signature"] = signature(data["items"], data["links"])
             navigation.refresh()
             content.refresh()
@@ -197,7 +212,9 @@ def register(path, demo=False):
                             list(store.COLORS), label="Project color", value=initial.get("color", "Violet")
                         ).props("outlined")
                     if item:
-                        key_input.disable()
+                        ui.label("Changing this key updates every work item in the project.").classes(
+                            "form-hint"
+                        )
                     repo = (
                         ui.input(
                             "Repository URL (optional)",
@@ -345,6 +362,8 @@ def register(path, demo=False):
                         error_label.text = str(error)
                         return
                     dialog.close()
+                    if is_project and item and state["project"] == item["project_key"]:
+                        state["project"] = saved["project_key"]
                     ui.notify(f"Saved {store.ticket(saved)}", type="positive")
                     refresh()
 
@@ -616,6 +635,23 @@ def register(path, demo=False):
                         ui.label("Readable notes, useful color, and room for details.").classes("muted")
                         ui.label("status: In progress").classes("tag self-start")
                 ui.separator()
+                ui.label("Field border thickness").classes("eyebrow")
+
+                def change_border(event):
+                    nonlocal border_width
+                    border_width = int(event.value)
+                    store.set_setting(path, "field_border_width", str(border_width))
+                    field_style.set_content(
+                        f"<style>body {{ --field-border-width:{border_width}px; }}</style>"
+                    )
+
+                ui.slider(min=1, max=4, step=1, value=border_width, on_change=change_border).props(
+                    "label label-always snap markers aria-label='Field border thickness'"
+                ).classes("w-full")
+                ui.label("1–4 px. Applies to dropdowns and text fields throughout the workspace.").classes(
+                    "form-hint"
+                )
+                ui.separator()
                 ui.label("Backup").classes("eyebrow")
                 ui.label(
                     "A complete SQLite backup includes all projects, relationships, preferences, and activity."
@@ -750,7 +786,11 @@ def register(path, demo=False):
             with ui.element("div").classes("board" + (" condensed-board" if state["condensed"] else "")):
                 for status in statuses:
                     matches = [x for x in items if x["status"] == status]
-                    with ui.element("section").classes("board-column").props(f"aria-label='{status} column'"):
+                    with (
+                        ui.element("section")
+                        .classes("board-column" + (" empty-lane" if not matches else ""))
+                        .props(f"aria-label='{status} column'")
+                    ):
                         with ui.element("div").classes("column-header"):
                             ui.element("span").classes("status-dot").style(
                                 "background:" + STATUS_COLORS[status]

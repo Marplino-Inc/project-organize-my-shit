@@ -29,7 +29,7 @@ uv run --no-dev python main.py --demo --port 8766
 ```
 
 Demo edits persist separately from your own projects. This is a source-based application,
-not a standalone executable or signed Windows installer. See the [v0.4.0 release notes](docs/releases/v0.4.0.md).
+not a standalone executable or signed Windows installer. See the [v0.5.0 release notes](docs/releases/v0.5.0.md).
 
 ## Local updates and browser refresh
 
@@ -57,6 +57,7 @@ the old server session. Saved projects remain in the separate local database.
 Drag a card by its grip to move between status columns, or use its action menu.
 Within-column order is by stable ticket number; manual ordering is not saved.
 Click a card body or title to open centered details, edit fields, add children, or link related work.
+Empty lanes stay compact, with their message and Add item button just below the heading.
 **Condensed view** reduces the board to ticket-number/title rows and remembers your choice.
 Selecting a sidebar project replaces the aggregate summary with its description, status, repository,
 tags, goal count, active/blocked work and completion progress. **Home** or **My workspace** restores the overview.
@@ -66,6 +67,10 @@ stay available in the toolbar, and the main panel fills the available browser wi
 Projects have an explicit lifecycle: finishing their tasks does **not** automatically mark them
 Completed. Completion totals count only the lowest-level committed work once, excluding ideas,
 cancelled items, and descendants of cancelled parents. An undivided goal counts as one work item.
+
+Project keys can be renamed in **Edit project**. Every work item receives the new prefix together;
+numbers, internal identities, relationships and history stay intact. Old ticket labels no longer resolve,
+so agents should refresh their item lists after a rename. Branch prefixes are not included.
 
 ## Tags and themes
 
@@ -81,6 +86,9 @@ source appears between the dropdown and the preview, which stays visible and upd
 The toolbar has only **Light / Dark** appearance controls. Former System preferences start in Light.
 The original five palettes are joined by 19 authored tonal palettes. All assets remain local.
 
+Text fields and dropdowns use a slightly darker background than the canvas. Preferences includes a
+**Field border thickness** slider (1?4 px), applied immediately and remembered after restart.
+
 ### Upgrading from 0.1.0 or 0.2.0
 
 Stop the old app before starting the updated version. On first use, the app creates a sibling
@@ -89,7 +97,7 @@ defaults; old work-item tags become null-valued local tags. Titles, IDs, descrip
 and activity are retained. Effort is removed from active storage and all interfaces; old values survive
 in the backup only. Do not open the migrated database with older code; use the pre-upgrade backup to
 roll back. New exports use snapshot version 3; version 1/2 snapshots still import, discarding effort.
-Agents must stop writing effort; see the [version 3 contract](docs/agent-interface.md).
+Agents must stop writing effort; see the [current agent contract](docs/agent-interface.md).
 
 ### Startup troubleshooting
 

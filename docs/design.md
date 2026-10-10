@@ -98,3 +98,18 @@ charts, and Preferences keeps a single live preview. The expanded catalog has 24
 including 19 authored tonal palettes. This provides Slack-like variety, not a verified match to Slack's
 current inventory: its [official theme guide](https://slack.com/help/articles/205166337-Change-your-Slack-theme)
 does not publish a count. The specific count remains an implementation assumption pending user feedback.
+
+## v0.5.0 feedback decisions ? 2026-10-10
+
+The user's marked screenshot calls for empty lanes to end below their message and Add item button,
+instead of stretching to match a populated lane. Align lanes at the top and retain a small drop area;
+apply the compact treatment in both card densities.
+
+Explicit direction: make fields darker than the canvas and provide a thickness slider. Implementation
+choice: mix the active canvas with 6% black for text-field and dropdown surfaces; interpret thickness as
+border width, from 1?4 px with a 1 px default. Preserve palette provenance and the accepted card preview.
+The preference updates immediately and persists. Rendered field text and labels are checked for 4.5:1
+contrast across all 48 theme/mode variants; user acceptance of this adjustment is still pending.
+
+Project-key changes propagate atomically to all items; identity, numbering and links remain stable.
+The user explicitly deferred branches, so this update adds no branch settings or prefixes.

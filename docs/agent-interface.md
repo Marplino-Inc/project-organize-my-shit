@@ -1,4 +1,4 @@
-# Agent interface, version 3
+# Agent interface, version 4
 
 Agents with access to the user's computer can use the CLI to read and update a workspace.
 The UI does not need to be running. No browser automation, separate server, or API token is needed.
@@ -109,7 +109,7 @@ Snapshot version 3 stores defaults and overrides separately and has no effort fi
 version 1/2 snapshots and discards their old effort values. For version 1 snapshots:
 old project tags become null-valued defaults, and old work-item tags become null-valued local tags.
 Version 1 agents must use tag objects instead of arrays. Version 2 agents must stop writing `effort`;
-it is rejected as an unknown field. Schema discovery reports API version 3, without an effort property.
+it is rejected as an unknown field. Schema discovery reports API version 4, without an effort property.
 
 ## Link and exchange
 
@@ -127,7 +127,11 @@ not execute repository code, modify Git state, or create GitHub issues.
 ## Contract boundaries
 
 - Editable fields: `title`, `description`, `status`, `tags`, `tag_defaults` (projects only), `color`, `blocked`, `parent_id`, `kind`, `repository_url`.
-- `project_key` is required on creation and immutable afterward. A project cannot become a task or vice versa.
+- `project_key` is required on creation. Update it on the Project record to rename all of its items atomically.
+  Renaming rejects occupied/invalid keys and preserves UUIDs, numbers, parent links, relationships and history.
+  Every affected revision increments, including cancelled items. Refetch after renaming; old labels no longer
+  resolve, but UUID references remain valid. Individual work items cannot change their project key.
+  A project cannot become a task or vice versa. Branch prefixes are not supported.
 - `id`, `number`, timestamps, and revision are managed by the application.
 - Parent hierarchy must move toward a higher level within the same project. Skipped levels are allowed.
 - `blocks` is directional; `relates to` is undirected. Neither changes ownership or completion counts.

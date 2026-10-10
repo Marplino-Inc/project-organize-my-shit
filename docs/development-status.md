@@ -1,5 +1,20 @@
 # Development status
 
+## v0.5.0 ? field visibility, compact lanes and project-key renaming
+
+Implemented the October 10 annotated screenshot feedback: darker field/dropdown surfaces, a persistent
+1?4 px border slider in Preferences, and independently sized empty lanes with top-positioned content.
+Renaming a project updates every item prefix and revision atomically, retaining UUIDs, numeric sequences,
+links, tags and history. Selection follows renames made locally or through the agent interface.
+Branch prefixes were explicitly deferred. Agent contract v4 documents renaming; DB v5 and snapshot v3 stay unchanged.
+
+Validation: 96 pytest checks and Ruff passed. Chromium covered field text/label contrast in all 48 theme
+variants, keyboard slider changes and persistence, UI/agent renames, empty lane geometry in both densities
+and modes, and existing CRUD, drag/drop, export, responsive and conflict flows. Preferences and empty-lane
+screenshots were visually inspected. This is automated evidence, not user acceptance or a full accessibility audit.
+The Windows source ZIP passed launcher, conflict, saved-data/theme/border persistence, automatic reconnect
+and unsaved-editor warning checks. Existing project data was not used for mutation tests.
+
 ## v0.4.0 ? focused workspace and local restart refresh
 
 Removed Outline, Map and Dashboard, keeping the board and project overview. Main content fills the
