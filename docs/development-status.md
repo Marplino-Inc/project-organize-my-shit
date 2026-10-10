@@ -1,5 +1,26 @@
 # Development status
 
+## v1.1.0 - Game styles, lane sorting and project colors
+
+Implemented six explicitly requested full style presets with game-name labels, both modes and
+stronger visual character. Existing palettes and the selected default remain. Added persistent
+within-lane ordering by ticket number, title, Feature and update time, plus twelve project colors
+with swatches. New color values require 1.1.0+ importers; database and JSON structures are unchanged.
+
+Validation: 170 pytest checks and Ruff passed. The full browser workflow passed all 100 palette/mode
+combinations. Dedicated game-style checks covered both densities, keyboard opening, dragging, narrow
+screens, saved selection and removing the style when switching back. Sorting browser checks covered
+all four orders, persistence, external membership updates, filtered views and status dragging.
+Project-color checks covered twelve options, actual band color and persistence; new colors round-trip
+through snapshots. Representative Persona, Halo, Alien and WoW screenshots and color swatches were
+visually inspected. These are automated/inspection results, not user acceptance or full accessibility
+conformance. Styles use original local CSS and system font fallbacks.
+The Windows ZIP passed launch/conflict checks and persisted World of Warcraft styling, Cyan project
+color, band/field preferences and Title sorting across restart. The unsaved-editor warning timed out
+once; a diagnostic rerun passed with an active user gesture and visible dirty editor logged. This
+is an intermittent existing check, not a fixed defect or draft-recovery guarantee.
+
+
 ## v1.0.1 - Expanded palettes
 
 Removed the decorative workspace stars tile. Added 20 palette families: GGplot Gray Pastel, all

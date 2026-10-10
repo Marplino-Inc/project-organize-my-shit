@@ -168,3 +168,11 @@ resolved names/descriptions; do not send this read-only field back in updates.
 Database schema v6 backs up a v5 workspace before migration. Snapshot v4 includes definitions and
 memberships; imports accept v1?v3 without requiring features. Importing a project copy retains scoped
 feature IDs and generates new item UUIDs, so copies remain independent.
+
+## Project colors in Sprig 1.1.0
+
+The existing `color` field additionally accepts Rose, Orange, Lime, Cyan, Indigo, Pink and Slate,
+alongside Violet, Teal, Amber, Coral and Blue. Use `schema` for the accepted values on the installed
+version. Snapshots with the new colors require 1.1.0 or later; earlier validators reject unknown colors.
+The JSON shape and database schema are unchanged. Board sorting is a presentation preference and
+does not change CLI list order, task numbers, relationships or stored statuses.

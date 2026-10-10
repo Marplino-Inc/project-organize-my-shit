@@ -1,0 +1,14 @@
+/* Cut-paper character without clipping controls or their focus rings. */
+body .sidebar { border-right:5px solid var(--accent); }
+body .hero,body .project-overview { border-left:10px solid var(--accent); border-bottom:4px solid var(--text); padding:14px 18px; background:linear-gradient(120deg,var(--accent-soft) 80%,transparent 80%); }
+body .hero h1,body .project-heading,body .dialog-heading { font-family:Impact,'Arial Black',sans-serif; text-transform:uppercase; letter-spacing:1.2px; font-weight:900; }
+body .column-header,body .section-title h2 { text-transform:uppercase; font-weight:900; letter-spacing:.7px; }
+body .board-column { border-radius:0; border-top:5px solid var(--accent); background:var(--surface-soft); }
+body .ticket-card,body .project-card,body .stat,body .palette-sample { border-radius:0; border-right:3px solid var(--text); border-bottom:3px solid var(--text); box-shadow:4px 4px 0 var(--accent-soft); }
+body .primary-button,body .secondary-button,body .sidebar .q-btn,body .tag,body .q-field--outlined .q-field__control { border-radius:0; }
+body .primary-button { border:2px solid var(--text); box-shadow:3px 3px 0 var(--text) !important; }
+body .dialog-card { border:4px solid var(--text); border-left:10px solid var(--accent); border-radius:0 !important; }
+body .ticket-card:hover { transform:none; box-shadow:4px 4px 0 var(--accent); }
+body .ticket-card,body .primary-button { transition:box-shadow 80ms linear,background-color 80ms linear; }
+
+@media (prefers-reduced-motion:reduce) { body .ticket-card,body .primary-button { transition:none !important; } }

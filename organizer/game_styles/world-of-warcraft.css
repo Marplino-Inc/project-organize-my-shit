@@ -1,0 +1,20 @@
+/* Original CSS parchment/metal treatment; no Blizzard assets. */
+body .main { background-image:radial-gradient(ellipse at top,color-mix(in srgb,var(--accent) 12%,transparent),transparent 65%); }
+body .sidebar { border-right:4px double var(--line); background-image:linear-gradient(90deg,var(--canvas),var(--surface),var(--canvas)); }
+body .hero,body .project-overview { padding:16px 12px; border-top:4px double var(--accent); border-bottom:4px double var(--line); background:linear-gradient(90deg,transparent,var(--accent-soft),transparent); }
+body .hero h1,body .project-heading,body .dialog-heading,body .section-title h2,body .column-header { font-family:Georgia,'Times New Roman',serif; }
+body .hero h1,body .project-heading { font-variant:small-caps; letter-spacing:1px; }
+body .project-card,body .stat,body .dialog-card,body .palette-sample { border:3px ridge var(--line); box-shadow:inset 0 0 0 2px var(--surface),0 3px 7px #00000020; }
+body .project-card { border-top:3px solid var(--project-color); }
+body .ticket-card { border-radius:3px; box-shadow:inset 0 0 0 1px var(--line),inset 0 0 16px color-mix(in srgb,var(--accent) 9%,transparent); }
+body .board-column { border:2px groove var(--line); border-radius:4px; background:var(--surface-soft); }
+body .column-header { border-bottom:1px solid var(--line); margin-bottom:10px; font-size:15px; }
+body .primary-button,body .secondary-button { border:3px ridge var(--line); border-radius:3px; }
+body .q-field--outlined .q-field__control { border-radius:2px; }
+body .sidebar .q-btn { border-radius:2px; }
+body .sidebar .nav-active { box-shadow:inset 3px 0 0 var(--accent),inset -3px 0 0 var(--accent); }
+body .dialog-card { border-radius:5px !important; border-width:5px; }
+body .progress-track { height:7px; border:1px solid var(--line); border-radius:1px; }
+body .ticket-card:hover { transform:none; box-shadow:inset 0 0 0 1px var(--accent),0 2px 8px #00000030; }
+
+@media (prefers-reduced-motion:reduce) { body .ticket-card,body .primary-button { transition:none !important; } }

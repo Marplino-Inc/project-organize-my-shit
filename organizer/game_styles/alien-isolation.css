@@ -1,0 +1,16 @@
+/* Terminal framing. No scanlines, text blur, flicker or synthetic cursor. */
+body { font-family:Consolas,'Courier New',monospace; }
+body .hero h1,body .project-heading,body .dialog-heading { font-family:Consolas,'Courier New',monospace; text-transform:uppercase; letter-spacing:-1px; }
+body .hero,body .project-overview { padding:14px; border:2px solid var(--accent); border-left-width:9px; }
+body .hero h1,body .project-heading,body .brand-name { color:var(--accent); }
+body .sidebar { border-right:2px solid var(--accent); }
+body .column-header,body .section-title h2 { text-transform:uppercase; }
+body .ticket-card,body .project-card,body .stat,body .palette-sample,body .board-column,body .dialog-card,body .primary-button,body .secondary-button,body .sidebar .q-btn,body .q-field--outlined .q-field__control,body .tag { border-radius:0 !important; box-shadow:none !important; }
+body .board-column { border:1px solid var(--line); background:var(--canvas); }
+body .column-header { border-bottom:1px dashed var(--line); margin-bottom:10px; }
+body .ticket-title,body .project-title { font-family:Consolas,'Courier New',monospace; }
+body .dialog-card { border:2px solid var(--accent); }
+body .q-field__native { caret-color:var(--accent); }
+body .ticket-card:hover { transform:none; border-right-color:var(--accent); border-bottom-color:var(--accent); }
+
+@media (prefers-reduced-motion:reduce) { body .ticket-card,body .primary-button { transition:none !important; } }

@@ -15,7 +15,20 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 STATUSES = ("Backlog", "Ready", "In progress", "Done", "Cancelled")
 PROJECT_STATUSES = ("Still a Dream", "Just Designing", "In Progress", "On Hold", "Completed", "Cancelled")
 KINDS = ("Project", "Major goal", "Minor goal", "Task", "Subtask", "Idea")
-COLORS = {"Violet": "#8b70ef", "Teal": "#24a99a", "Amber": "#d99a30", "Coral": "#ed7d75", "Blue": "#6299e8"}
+COLORS = {
+    "Violet": "#8b70ef",
+    "Teal": "#24a99a",
+    "Amber": "#d99a30",
+    "Coral": "#ed7d75",
+    "Blue": "#6299e8",
+    "Rose": "#d76b91",
+    "Orange": "#e68a3e",
+    "Lime": "#96af3f",
+    "Cyan": "#39afc7",
+    "Indigo": "#7278d2",
+    "Pink": "#cb79c8",
+    "Slate": "#8295a8",
+}
 RANK = {"Project": 0, "Major goal": 1, "Minor goal": 2, "Task": 3, "Subtask": 4, "Idea": 4}
 
 
@@ -50,7 +63,20 @@ class Item(BaseModel):
     tag_defaults: dict[str, str | None] = Field(default_factory=dict, max_length=30)
     feature_definitions: dict[str, Feature] = Field(default_factory=dict, max_length=50)
     feature_ids: list[str] = Field(default_factory=list, max_length=50)
-    color: Literal["Violet", "Teal", "Amber", "Coral", "Blue"] = "Violet"
+    color: Literal[
+        "Violet",
+        "Teal",
+        "Amber",
+        "Coral",
+        "Blue",
+        "Rose",
+        "Orange",
+        "Lime",
+        "Cyan",
+        "Indigo",
+        "Pink",
+        "Slate",
+    ] = "Violet"
     blocked: str = Field(default="", max_length=1000)
     repository_url: str = Field(default="", max_length=2000)
     created_at: str
