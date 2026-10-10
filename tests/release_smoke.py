@@ -155,6 +155,9 @@ def main():
                     page.wait_for_function(
                         "getComputedStyle(document.body).getPropertyValue('--canvas').trim() === '#19231f'"
                     )
+                    slider = page.get_by_role("slider", name="Field border thickness", exact=True)
+                    slider.locator("[tabindex]").press("ArrowRight")
+                    expect(slider).to_have_attribute("aria-valuenow", "2")
                     page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
                     # Verify the preference write completed before terminating the process.
                     page.reload()
@@ -168,6 +171,9 @@ def main():
                     )
                     page.get_by_role("button", name="Preferences", exact=True).click()
                     expect(page.get_by_label("Theme palette", exact=True)).to_have_value("Shiny Mint")
+                    expect(
+                        page.get_by_role("slider", name="Field border thickness", exact=True)
+                    ).to_have_attribute("aria-valuenow", "2")
                     page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
                     expect(
                         page.locator(".project-card").get_by_role(

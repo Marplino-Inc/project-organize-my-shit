@@ -54,10 +54,11 @@ body { background: var(--canvas) !important; color: var(--text) !important; font
 .filters { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin:18px 0 14px; }
 .filters .q-field { min-width: 135px; }
 .filters .search { width: 240px; }
-.q-field--outlined .q-field__control:before { border-color: var(--line); }
-.q-field--outlined .q-field__control { border-radius: 8px; }
+.q-field--outlined .q-field__control:before { border-color: var(--line); border-width:var(--field-border-width,1px); }
+.q-field--outlined .q-field__control:after { border-width:max(2px,var(--field-border-width,1px)); }
+.q-field--outlined .q-field__control { border-radius: 8px; background:color-mix(in srgb,var(--canvas) 94%,black); }
 .q-field__label { color: var(--muted); }
-.board { display: grid; grid-template-columns: repeat(4,minmax(210px,1fr)); gap: 15px; overflow-x:auto; padding-bottom: 12px; }
+.board { display: grid; grid-template-columns: repeat(4,minmax(210px,1fr)); align-items:start; gap: 15px; overflow-x:auto; padding-bottom: 12px; }
 .board-column { min-width: 0; background: color-mix(in srgb,var(--surface-soft) 55%,transparent); border-radius: 12px; padding: 12px 9px; }
 .column-header { display: flex; align-items:center; gap: 8px; padding: 1px 4px 13px; font-weight: 700; font-size: 13px; }
 .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink:0; }
@@ -106,7 +107,7 @@ body.body--dark .tag-amber { background:#443921; color:#efd093; }body.body--dark
 .error-text { color:var(--negative); font-size:13px; white-space:pre-wrap; }
 .detail-description { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.7; font-size:14px; }
 .repo-link { color:var(--accent); font-size:12px; text-decoration:none; overflow-wrap:anywhere; }
-.q-menu { background:var(--surface) !important; color:var(--text); }
+.q-menu { background:color-mix(in srgb,var(--canvas) 94%,black) !important; color:var(--text); }
 .theme-toggle { border:1px solid var(--line); border-radius:8px; padding:3px; background:var(--surface); }
 .theme-toggle .q-btn { min-height:27px; font-size:11px; padding:3px 9px; }
 /* Quasar places important utility colors in cascade layers. An early layer
@@ -133,3 +134,6 @@ body.body--dark .tag-amber { background:#443921; color:#efd093; }body.body--dark
 
 .shell.sidebar-collapsed { grid-template-columns:minmax(0,1fr); }
 .shell.sidebar-collapsed > .sidebar { display:none; }
+.board-column.empty-lane { min-height:0; }
+.empty-lane .ticket-list { min-height:12px; }
+.empty-lane .empty-column { padding:12px; }
