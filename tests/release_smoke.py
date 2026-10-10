@@ -149,20 +149,26 @@ def main():
                     ).to_be_visible()
                     page.get_by_role("button", name="Dark", exact=True).click()
                     expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
-                    page.get_by_label("Palette", exact=True).click()
+                    page.get_by_role("button", name="Preferences", exact=True).click()
+                    page.get_by_label("Theme palette", exact=True).click()
                     page.get_by_role("option", name="Shiny Mint", exact=True).click()
                     page.wait_for_function(
                         "getComputedStyle(document.body).getPropertyValue('--canvas').trim() === '#19231f'"
                     )
+                    page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
                     # Verify the preference write completed before terminating the process.
                     page.reload()
                     expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
-                    page.close()
+                    page.wait_for_function("window.did_handshake === true")
+                    client_id = page.evaluate("window.clientId")
                     stop(process)
                     process = start()
-                    page = browser.new_page()
-                    page.goto(url)
-                    expect(page.get_by_label("Palette", exact=True)).to_have_value("Shiny Mint")
+                    page.wait_for_function(
+                        "previous => window.clientId !== previous", arg=client_id, timeout=20000
+                    )
+                    page.get_by_role("button", name="Preferences", exact=True).click()
+                    expect(page.get_by_label("Theme palette", exact=True)).to_have_value("Shiny Mint")
+                    page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
                     expect(
                         page.locator(".project-card").get_by_role(
                             "button", name="Release persistence check", exact=True
@@ -173,6 +179,18 @@ def main():
                     assert not list(app_root.rglob("*.db")), (
                         "Working data leaked into the application directory"
                     )
+                    # A dirty editor must get a native warning, not silently disappear on restart.
+                    page.get_by_role("button", name="New project", exact=True).last.click()
+                    page.get_by_role("dialog").get_by_label("Title", exact=True).fill("Unsaved restart check")
+                    with page.expect_event("dialog", timeout=20000) as warning:
+                        stop(process)
+                        process = start()
+                    assert warning.value.type == "beforeunload"
+                    warning.value.dismiss()
+                    expect(page.get_by_role("dialog").get_by_label("Title", exact=True)).to_have_value(
+                        "Unsaved restart check"
+                    )
+                    page.close()
                     browser.close()
             finally:
                 stop(process)
@@ -181,7 +199,7 @@ def main():
             {
                 "ok": True,
                 "archive": str(args.archive),
-                "checks": "clean archive, Start.cmd from a path with spaces, first project, full process restart, theme/data persistence",
+                "checks": "clean archive, Start.cmd, duplicate launch, port conflict, automatic reload after restart, theme/data persistence, unsaved-edit reload warning",
             }
         )
     )

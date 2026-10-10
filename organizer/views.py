@@ -2,7 +2,6 @@
 
 import json
 import tempfile
-from collections import Counter
 from pathlib import Path
 
 from nicegui import ui
@@ -18,14 +17,6 @@ STATUS_COLORS = {
     "Done": "#24a99a",
     "Cancelled": "#ed7d75",
 }
-ICONS = {
-    "Project": "folder_open",
-    "Major goal": "flag",
-    "Minor goal": "outlined_flag",
-    "Task": "check_box_outline_blank",
-    "Subtask": "subdirectory_arrow_right",
-    "Idea": "lightbulb_outline",
-}
 
 
 def register(path, demo=False):
@@ -33,9 +24,14 @@ def register(path, demo=False):
     def workspace():
         client = ui.context.client
         ui.add_css((Path(__file__).parent / "styles.css").read_text(encoding="utf-8"))
+        ui.add_head_html(
+            "<script>" + (Path(__file__).parent / "browser.js").read_text(encoding="utf-8") + "</script>"
+        )
         ui.colors(primary="#7053c1", secondary="#24a99a", positive="#087e6e", negative="#b04447")
-        preference = store.setting(path, "theme", "System")
-        dark = ui.dark_mode({"Light": False, "Dark": True, "System": None}[preference])
+        preference = store.setting(path, "theme", "Light")
+        if preference not in ("Light", "Dark"):
+            preference = "Light"
+        dark = ui.dark_mode({"Light": False, "Dark": True}[preference])
         palette = store.setting(path, "palette", "organize")
         if palette not in themes.FAMILIES:
             palette = "organize"
@@ -44,14 +40,13 @@ def register(path, demo=False):
         state = {
             "project": None,
             "stage": None,
-            "view": "Board",
             "search": "",
             "tag": None,
             "kind": None,
             "status": None,
             "condensed": store.setting(path, "board_density", "Full") == "Condensed",
             "blocked": False,
-            "expanded": False,
+            "sidebar_collapsed": store.setting(path, "sidebar_collapsed", "false") == "true",
             "signature": None,
         }
         data = {"items": [], "links": []}
@@ -76,10 +71,6 @@ def register(path, demo=False):
         def change_filter(key, value):
             state[key] = value
             work_area.refresh()
-
-        def change_view(view):
-            state["view"] = view
-            content.refresh()
 
         def selected_items():
             projects = {
@@ -130,7 +121,7 @@ def register(path, demo=False):
         def tags_for(item):
             return store.effective_tags(item, data["items"])
 
-        def project_color(item, literal=False):
+        def project_color(item):
             root = next(
                 (
                     x
@@ -139,8 +130,6 @@ def register(path, demo=False):
                 ),
                 item,
             )
-            if literal:
-                return themes.project_colors(palette)[root["color"]]
             return f"var(--palette-{list(store.COLORS).index(root['color'])})"
 
         def tag_label(name, value):
@@ -160,7 +149,7 @@ def register(path, demo=False):
             work_area.refresh()
 
         def change_theme(value):
-            dark.value = {"Light": False, "Dark": True, "System": None}[value]
+            dark.value = {"Light": False, "Dark": True}[value]
             store.set_setting(path, "theme", value)
 
         def update_status(item, status):
@@ -185,7 +174,7 @@ def register(path, demo=False):
                 or state["project"]
                 or next(iter(roots), "")
             )
-            with client.layout, ui.dialog() as dialog, ui.card().classes("dialog-card"):
+            with client.layout, ui.dialog() as dialog, ui.card().classes("dialog-card item-editor"):
                 ui.label(
                     ("Edit " + store.ticket(item))
                     if item
@@ -582,14 +571,33 @@ def register(path, demo=False):
                 ui.label("Workspace preferences").classes("dialog-heading")
                 ui.label("Palette library").classes("eyebrow")
                 ui.label(
-                    "Each palette supports Light, Dark, and System. Preview it on your actual board; switch back at any time."
+                    "Each palette supports Light and Dark. Preview it on your actual board; switch back at any time."
                 ).classes("form-hint")
+
+                @ui.refreshable
+                def palette_source():
+                    theme = themes.FAMILIES[appearance["palette"]]
+                    with ui.row().classes("palette-source items-center gap-1"):
+                        ui.label("Source:").classes("form-hint")
+                        if theme["url"]:
+                            ui.link(theme["source"], theme["url"], new_tab=True).props(
+                                "rel=noopener"
+                            ).classes("repo-link")
+                        else:
+                            ui.label(theme["source"]).classes("form-hint")
+
+                def choose_palette(event):
+                    change_palette(event.value)
+                    palette_source.refresh()
+
                 ui.select(
                     {key: theme["name"] for key, theme in themes.FAMILIES.items()},
                     label="Theme palette",
-                    with_input=True,
-                    on_change=lambda e: change_palette(e.value),
-                ).bind_value(appearance, "palette").props("outlined dense").classes("w-full")
+                    on_change=choose_palette,
+                ).bind_value(appearance, "palette").props(
+                    "outlined dense virtual-scroll-slice-size=100"
+                ).classes("w-full")
+                palette_source()
                 with ui.element("div").classes("palette-preview"):
                     ui.label().bind_text_from(
                         appearance, "palette", backward=lambda key: themes.FAMILIES[key]["name"]
@@ -607,9 +615,6 @@ def register(path, demo=False):
                         ui.label("A clearer view of your next step").classes("font-bold")
                         ui.label("Readable notes, useful color, and room for details.").classes("muted")
                         ui.label("status: In progress").classes("tag self-start")
-                    ui.label().bind_text_from(
-                        appearance, "palette", backward=lambda key: themes.FAMILIES[key]["source"]
-                    ).classes("form-hint")
                 ui.separator()
                 ui.label("Backup").classes("eyebrow")
                 ui.label(
@@ -664,9 +669,6 @@ def register(path, demo=False):
                         "flat"
                     ).classes("w-full muted")
                 with ui.column().classes("sidebar-bottom w-full gap-2"):
-                    ui.button("Preferences", icon="tune", on_click=settings_dialog).props("flat").classes(
-                        "w-full muted"
-                    )
                     ui.label("Yours. On this computer.").classes("text-xs muted px-2")
                     if demo:
                         ui.label("Demo workspace").classes("demo-label")
@@ -768,193 +770,18 @@ def register(path, demo=False):
                             "Add item", icon="add", on_click=lambda s=status: edit_dialog(status=s)
                         ).props("flat").classes("add-card")
 
-        def outline(items):
-            by_id = {x["id"]: x for x in data["items"]}
-            visible_ids = {x["id"] for x in items}
-            context_ids = set(visible_ids)
-            for item in items:
-                cursor = by_id.get(item["parent_id"])
-                while cursor:
-                    context_ids.add(cursor["id"])
-                    cursor = by_id.get(cursor["parent_id"])
-
-            def branch(parent_id=None, depth=0):
-                for item in (
-                    x for x in data["items"] if x["parent_id"] == parent_id and x["id"] in context_ids
-                ):
-                    with (
-                        ui.element("div").classes("outline-row").style(f"margin-left:{min(depth, 4) * 20}px")
-                    ):
-                        ui.icon(ICONS[item["kind"]], size="18px").style("color:" + project_color(item))
-                        ui.label(store.ticket(item)).classes("ticket-id")
-                        ui.button(item["title"], on_click=lambda x=item: detail(x)).props(
-                            "flat dense"
-                        ).classes("flex-1")
-                        ui.label(item["status"] if item["id"] in visible_ids else "Parent context").classes(
-                            "tag"
-                        )
-                    branch(item["id"], depth + 1)
-
-            branch()
-
-        def graph(items):
-            included = (
-                items if state["expanded"] else [x for x in items if x["kind"] in ("Project", "Major goal")]
-            )
-            if not included:
-                ui.label("No nodes match. Try including tasks or clearing filters.").classes("muted")
-                return
-            included = included[:150]
-            ids = {x["id"] for x in included}
-            nodes = [
-                {
-                    "id": x["id"],
-                    "name": store.ticket(x) + "\n" + x["title"][:30],
-                    "value": store.ticket(x),
-                    "symbolSize": 44 if x["kind"] == "Project" else 26,
-                    "itemStyle": {"color": project_color(x, literal=True)},
-                    "label": {"show": True, "position": "bottom"},
-                }
-                for x in included
-            ]
-            edges = [
-                {
-                    "source": x["parent_id"],
-                    "target": x["id"],
-                    "value": "contains",
-                    "lineStyle": {"color": "#aaa5bb", "type": "solid"},
-                }
-                for x in included
-                if x["parent_id"] in ids
-            ]
-            edges += [
-                {
-                    "source": x["source"],
-                    "target": x["target"],
-                    "value": x["kind"],
-                    "symbol": ["none", "arrow" if x["kind"] == "blocks" else "none"],
-                    "lineStyle": {
-                        "color": "#d99a30" if x["kind"] == "blocks" else "#8b70ef",
-                        "type": "dashed",
-                        "curveness": 0.15,
-                    },
-                }
-                for x in data["links"]
-                if x["source"] in ids and x["target"] in ids
-            ]
-
-            def node_click(event):
-                if event.data_type == "node":
-                    detail(included[event.data_index])
-
-            with ui.element("div").classes("graph-shell"):
-                ui.echart(
-                    {
-                        "animation": False,
-                        "tooltip": {"show": False},
-                        "series": [
-                            {
-                                "type": "graph",
-                                "layout": "force",
-                                "roam": True,
-                                "draggable": True,
-                                "data": nodes,
-                                "links": edges,
-                                "force": {"repulsion": 650, "edgeLength": 140},
-                                "lineStyle": {"width": 2},
-                                "emphasis": {"focus": "adjacency"},
-                            }
-                        ],
-                    },
-                    on_point_click=node_click,
-                    renderer="svg",
-                ).classes("w-full h-[460px]")
-                ui.label(
-                    "Solid: parent / child · Dashed violet: related · Dashed amber arrow: blocks · Drag to arrange; click to open."
-                ).classes("graph-legend")
-            ui.label(
-                "Showing up to 150 matching nodes. Narrow the project or tag filter for larger workspaces."
-            ).classes("form-hint mt-3")
-            with ui.expansion("Browse map items with the keyboard", icon="list").classes("w-full"):
-                for item in included:
-                    ui.button(
-                        store.ticket(item) + " · " + item["title"], on_click=lambda x=item: detail(x)
-                    ).props("flat dense")
-
-        def dashboard(items):
-            tickets = [x for x in items if x["kind"] != "Project"]
-            with ui.element("div").classes("dashboard-grid"):
-
-                def distribution(title, counts, filter_key, palette):
-                    with ui.element("section").classes("panel"):
-                        ui.label(title).classes("text-base font-bold mb-3")
-                        maximum = max(counts.values(), default=1) or 1
-                        for index, (label, count) in enumerate(counts.items()):
-                            with ui.element("div").classes("distribution"):
-
-                                def drill(label=label):
-                                    state[filter_key] = label
-                                    state["view"] = "Board"
-                                    content.refresh()
-
-                                text = (
-                                    store.tag_options(tickets, data["items"]).get(label, str(label))
-                                    if filter_key == "tag"
-                                    else str(label)
-                                )
-                                ui.button(text, on_click=drill).props("flat dense")
-                                with ui.element("div").classes("distribution-track"):
-                                    ui.element("div").style(
-                                        f"height:100%;width:{100 * count / maximum}%;background:{palette[index % len(palette)]};border-radius:5px"
-                                    )
-                                ui.label(str(count)).classes("text-xs muted")
-
-                distribution(
-                    "Work by status",
-                    {s: sum(x["status"] == s for x in tickets) for s in store.STATUSES},
-                    "status",
-                    list(STATUS_COLORS.values()),
-                )
-                distribution(
-                    "Work by type",
-                    dict(Counter(x["kind"] for x in tickets)),
-                    "kind",
-                    themes.FAMILIES[palette]["colors"],
-                )
-                distribution(
-                    "Work by tag",
-                    dict(Counter(tag for x in tickets for tag in store.tag_options([x], data["items"]))),
-                    "tag",
-                    themes.FAMILIES[palette]["colors"],
-                )
-            ui.label(
-                "Charts count matching work items by level. Completion cards above count only committed leaf work in the selected project scope."
-            ).classes("form-hint mt-4")
-
         @ui.refreshable
         def work_area():
             items = filtered_items()
             count = sum(
-                x["kind"] != "Project"
-                and (state["view"] != "Board" or x["status"] != "Cancelled" or state["status"] == "Cancelled")
+                x["kind"] != "Project" and (x["status"] != "Cancelled" or state["status"] == "Cancelled")
                 for x in items
             )
             ui.label(
                 f"{count} matching work items"
-                + (
-                    " · Cancelled items hidden"
-                    if state["view"] == "Board" and state["status"] != "Cancelled"
-                    else ""
-                )
+                + (" · Cancelled items hidden" if state["status"] != "Cancelled" else "")
             ).classes("form-hint mb-3")
-            if state["view"] == "Board":
-                board(items)
-            elif state["view"] == "Outline":
-                outline(items)
-            elif state["view"] == "Map":
-                graph(items)
-            else:
-                dashboard(items)
+            board(items)
 
         @ui.refreshable
         def content():
@@ -962,6 +789,24 @@ def register(path, demo=False):
             selected = next((x for x in roots if x["project_key"] == state["project"]), None)
             with ui.element("div").classes("topbar"):
                 with ui.element("div").classes("breadcrumbs"):
+
+                    def toggle_sidebar():
+                        state["sidebar_collapsed"] = not state["sidebar_collapsed"]
+                        collapsed = state["sidebar_collapsed"]
+                        store.set_setting(path, "sidebar_collapsed", str(collapsed).lower())
+                        shell.classes(
+                            add="sidebar-collapsed" if collapsed else "",
+                            remove="" if collapsed else "sidebar-collapsed",
+                        )
+                        sidebar_toggle.props(f"aria-expanded={str(not collapsed).lower()}")
+
+                    sidebar_toggle = (
+                        ui.button(icon="menu", on_click=toggle_sidebar)
+                        .props(
+                            f"flat round dense aria-label='Toggle sidebar' aria-expanded={str(not state['sidebar_collapsed']).lower()}"
+                        )
+                        .tooltip("Show or hide sidebar")
+                    )
                     ui.icon("home", size="16px")
                     ui.label("Workspace")
                     ui.label("/")
@@ -969,18 +814,15 @@ def register(path, demo=False):
                     if demo:
                         ui.label("Demo").classes("demo-label")
                 with ui.row().classes("items-center gap-3"):
-                    ui.select(
-                        {key: value["name"] for key, value in themes.FAMILIES.items()},
-                        label="Palette",
-                        with_input=True,
-                        value=palette,
-                        on_change=lambda event: change_palette(event.value),
-                    ).bind_value(appearance, "palette").props("outlined dense").classes("w-44")
                     ui.toggle(
-                        ["Light", "Dark", "System"],
-                        value=store.setting(path, "theme", "System"),
+                        ["Light", "Dark"],
+                        value="Dark" if dark.value else "Light",
                         on_change=lambda e: change_theme(e.value),
                     ).props("unelevated toggle-color=primary").classes("theme-toggle")
+                    ui.button("Home", icon="home", on_click=lambda: choose_project(None)).props("flat dense")
+                    ui.button(icon="tune", on_click=settings_dialog).props(
+                        "flat round dense aria-label='Preferences'"
+                    ).tooltip("Workspace preferences")
                     ui.button(icon="refresh", on_click=refresh).props(
                         "flat round dense aria-label='Refresh workspace'"
                     ).tooltip("Refresh workspace")
@@ -1147,26 +989,16 @@ def register(path, demo=False):
                                 ui.label(f"{round(100 * done / total)}%" if total else "No planned work")
             with ui.element("div").classes("workspace-panel"):
                 with ui.row().classes("w-full justify-between items-center"):
-                    with ui.element("div").classes("view-tabs"):
-                        for name, icon in (
-                            ("Board", "view_kanban"),
-                            ("Outline", "account_tree"),
-                            ("Map", "hub"),
-                            ("Dashboard", "bar_chart"),
-                        ):
-                            ui.button(name, icon=icon, on_click=lambda name=name: change_view(name)).props(
-                                "flat"
-                            ).classes("selected" if state["view"] == name else "")
-                    if state["view"] == "Board":
+                    ui.label("Work items").classes("text-base font-bold")
 
-                        def change_density(event):
-                            state["condensed"] = event.value
-                            store.set_setting(path, "board_density", "Condensed" if event.value else "Full")
-                            work_area.refresh()
+                    def change_density(event):
+                        state["condensed"] = event.value
+                        store.set_setting(path, "board_density", "Condensed" if event.value else "Full")
+                        work_area.refresh()
 
-                        ui.switch("Condensed view", value=state["condensed"], on_change=change_density).props(
-                            "dense"
-                        )
+                    ui.switch("Condensed view", value=state["condensed"], on_change=change_density).props(
+                        "dense"
+                    )
                     ui.button("New item", icon="add", on_click=edit_dialog).classes("primary-button")
                 with ui.element("div").classes("filters"):
                     search = (
@@ -1204,12 +1036,6 @@ def register(path, demo=False):
                         value=state["blocked"],
                         on_change=lambda e: change_filter("blocked", e.value),
                     ).props("dense")
-                    if state["view"] == "Map":
-                        ui.checkbox(
-                            "Include tasks",
-                            value=state["expanded"],
-                            on_change=lambda e: change_filter("expanded", e.value),
-                        ).props("dense")
 
                     def clear_filters():
                         state.update(search="", tag=None, kind=None, status=None, blocked=False)
@@ -1220,7 +1046,9 @@ def register(path, demo=False):
 
         data["items"], data["links"] = store.load(path)
         state["signature"] = signature(data["items"], data["links"])
-        with ui.element("div").classes("shell"):
+        with ui.element("div").classes(
+            "shell" + (" sidebar-collapsed" if state["sidebar_collapsed"] else "")
+        ) as shell:
             navigation()
             with ui.element("main").classes("main"):
                 content()

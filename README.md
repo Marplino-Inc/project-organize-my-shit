@@ -29,11 +29,19 @@ uv run --no-dev python main.py --demo --port 8766
 ```
 
 Demo edits persist separately from your own projects. This is a source-based application,
-not a standalone executable or signed Windows installer. See the [v0.3.0 release notes](docs/releases/v0.3.0.md).
+not a standalone executable or signed Windows installer. See the [v0.4.0 release notes](docs/releases/v0.4.0.md).
+
+## Local updates and browser refresh
+
+After updated files are installed locally and the app is restarted, an open browser reconnects and
+refreshes automatically. A GitHub push alone does not update your local files; the app does not download
+updates itself. Save or close editors before updating. An open edited form triggers the browser's
+reload warning; choosing to stay keeps the text available to copy, but does not save a draft or restore
+the old server session. Saved projects remain in the separate local database.
 
 ## What is included
 
-- 24 palettes, each with light, dark, and system appearance, remembered between launches.
+- 24 palettes, each with light and dark appearance, remembered between launches.
 - Project colors and name/value tags, with compact cards and expandable details.
 - Projects → major goals → minor goals → tasks → subtasks, with optional skipped levels.
 - Ideas that do not count toward committed completion totals.
@@ -41,7 +49,7 @@ not a standalone executable or signed Windows installer. See the [v0.3.0 release
 - Project stages: **Still a Dream, Just Designing, In Progress, On Hold, Completed, Cancelled**.
 - Separate task statuses: **Backlog, Ready, In progress, Done, Cancelled**.
 - A repository URL on each project. Repository links do not automatically synchronize GitHub issues.
-- Board, hierarchy outline, relationship map, and dashboard views.
+- One work board with project overviews and full/condensed cards.
 - Cross-project `blocks` and `relates to` links; unresolved blockers are visibly marked.
 - JSON snapshot exchange, standalone HTML reports, and full database backups.
 - A [JSON command-line interface for AI agents](docs/agent-interface.md), sharing all UI validation.
@@ -51,7 +59,9 @@ Within-column order is by stable ticket number; manual ordering is not saved.
 Click a card body or title to open centered details, edit fields, add children, or link related work.
 **Condensed view** reduces the board to ticket-number/title rows and remembers your choice.
 Selecting a sidebar project replaces the aggregate summary with its description, status, repository,
-tags, goal count, active/blocked work and completion progress. **My workspace** restores the overview.
+tags, goal count, active/blocked work and completion progress. **Home** or **My workspace** restores the overview.
+Use the menu button to collapse or expand the sidebar; the choice is remembered. Home and Preferences
+stay available in the toolbar, and the main panel fills the available browser width.
 
 Projects have an explicit lifecycle: finishing their tasks does **not** automatically mark them
 Completed. Completion totals count only the lowest-level committed work once, excluding ideas,
@@ -64,10 +74,11 @@ explicit **Null** selection. Defaults appear on the project and every work item,
 items. Work items can **Override** a default; turn Override off to follow the project again.
 Changing a project default updates all items that inherit it. Add extra item-specific pairs with
 **Add tag**. **Copy defaults from project → Copy set** reuses another project's set; later edits to
-the source set do not change the copy. Filters and dashboard tag groups use the effective name/value pair.
+the source set do not change the copy. Filters use the effective name/value pair.
 
-Use the searchable **Palette** dropdown beside Light / Dark / System to select from 24 families.
-Preferences has the same dropdown with one preview that stays visible and updates in place.
+Use **Preferences → Theme palette**, a non-editable dropdown, to select from 24 families. The palette's
+source appears between the dropdown and the preview, which stays visible and updates in place.
+The toolbar has only **Light / Dark** appearance controls. Former System preferences start in Light.
 The original five palettes are joined by 19 authored tonal palettes. All assets remain local.
 
 ### Upgrading from 0.1.0 or 0.2.0
@@ -121,6 +132,8 @@ The selected backup becomes the working database. Project snapshots omit local p
 use a database backup when you need the entire workspace.
 
 ## Development
+
+See [product scope](docs/product-scope.md) for the focused project/task workflow and small-update cadence.
 
 ```powershell
 uv sync --locked
