@@ -181,10 +181,12 @@ def main():
                         page.get_by_role("option", name=theme["name"], exact=True).click()
                         expect(page.locator(".palette-source")).to_contain_text(theme["source"])
                         assert picker.get_attribute("id") == picker_id
-                        assert (
-                            page.locator(".palette-source").bounding_box()["y"]
-                            < page.locator(".palette-preview").bounding_box()["y"]
-                        )
+                        page.wait_for_function("""() => {
+                            const source = document.querySelector('.palette-source');
+                            const preview = document.querySelector('.palette-preview');
+                            return source?.getClientRects().length && preview?.getClientRects().length
+                                && source.getBoundingClientRect().y < preview.getBoundingClientRect().y;
+                        }""")
                         if theme["url"]:
                             expect(page.locator(".palette-source a")).to_have_attribute("href", theme["url"])
                         page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
