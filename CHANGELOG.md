@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0 - Sprig
+
+- Rename the product to Sprig and add an original theme-aware card-and-leaf SVG logo and favicon.
+- Add persistent Color by Feature: a segmented front band supplements the project band for assigned work.
+- Thicken both bands to 5 px by default and add a persistent 3-10 px Preferences slider.
+- Drag card bodies or titles between lanes, including empty lanes, while retaining click-to-open and menu alternatives.
+- Preserve existing data paths, CLI/snapshot contracts and project identities.
+
 ## 0.6.0
 
 - Define project Features with names and descriptions, and assign multiple Features to each work item.

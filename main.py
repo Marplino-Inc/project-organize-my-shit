@@ -16,7 +16,7 @@ from organizer.views import register
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Organize — a local project workspace")
+    parser = argparse.ArgumentParser(description="Sprig — a local project workspace")
     parser.add_argument("--demo", action="store_true", help="Use a separate sample workspace")
     parser.add_argument("--db", type=Path, help="Use a particular SQLite workspace")
     parser.add_argument("--port", type=int, default=8765)
@@ -42,7 +42,7 @@ def main():
             except (OSError, ValueError):
                 running = None
             if running == identity:
-                print(f"Organize is already running at {url}. Reusing your workspace.")
+                print(f"Sprig is already running at {url}. Reusing your workspace.")
                 if not args.no_browser:
                     webbrowser.open(url)
                 return
@@ -62,8 +62,8 @@ def main():
     ui.run(
         host="127.0.0.1",
         port=args.port,
-        title="Organize · Your project workspace",
-        favicon="🗂️",
+        title="Sprig · Your project workspace",
+        favicon=Path(__file__).parent / "organizer" / "logo.svg",
         reload=False,
         show=not args.no_browser,
         dark=None,

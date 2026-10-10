@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-labelledby="sprig-title">
+  <title id="sprig-title">Sprig — ideas taking root</title>
+  <rect x="5" y="9" width="29" height="34" rx="7" fill="var(--accent-soft, #ede8fa)" stroke="var(--accent, #7053c1)" stroke-width="2"/>
+  <path d="M12 18h12M12 24h8" fill="none" stroke="var(--accent, #7053c1)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M29 36V22" fill="none" stroke="var(--positive, #087e6e)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M29 27C18 27 19 17 19 17s11-1 10 10Z" fill="var(--palette-1, #24a99a)"/>
+  <path d="M29 23C28 11 41 9 41 9s2 13-12 14Z" fill="var(--positive, #087e6e)"/>
+</svg>

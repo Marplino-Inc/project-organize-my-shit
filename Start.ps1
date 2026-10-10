@@ -27,7 +27,7 @@ try {
     $logDirectory = Join-Path $env:LOCALAPPDATA 'ProjectOrganize/logs'
     New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
     $runLog = Join-Path $logDirectory ("startup-{0}-{1}.log" -f (Get-Date -Format 'yyyyMMdd-HHmmss'), $PID)
-    Write-Host "Organize is opening at http://127.0.0.1:$Port. Keep this window open; press Ctrl+C to stop."
+    Write-Host "Sprig is opening at http://127.0.0.1:$Port. Keep this window open; press Ctrl+C to stop."
     Write-Host "Startup log: $runLog"
     # Windows PowerShell treats native stderr as error records. Preserve it without
     # replacing Python's actual exit code and diagnosis with a generic exception.
@@ -37,7 +37,7 @@ try {
         & $uvPath @appArguments 2>&1 | ForEach-Object { $_.ToString() } | Tee-Object -FilePath $runLog
         $appExit = $LASTEXITCODE
     } finally { $ErrorActionPreference = $previousPreference }
-    if ($appExit -ne 0) { throw "Organize exited with code $appExit. The cause is shown above and saved in $runLog" }
+    if ($appExit -ne 0) { throw "Sprig exited with code $appExit. The cause is shown above and saved in $runLog" }
 } finally {
     Pop-Location
 }

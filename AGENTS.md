@@ -29,3 +29,10 @@ For a new product, 0.1.0 should be the smallest usable project/task lifecycle. A
 that core dependable through real use, recovery, clear errors and installation/update evidence, with
 only a few justified additions. This app already has published versions; move forward without renumbering
 history. See docs/product-scope.md for the current boundary and follow-up cadence.
+
+## Sprig compatibility and completion
+
+Sprig is the display name. Preserve the existing repository/module names, ProjectOrganize data
+directory and protocol identifiers. Color by Feature uses one segment per membership, never copied
+work items. Keep status-menu alternatives to mouse dragging. The requested development round ends
+at v0.7.0; do not propose more features without a new request.

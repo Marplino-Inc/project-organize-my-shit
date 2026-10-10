@@ -1,4 +1,6 @@
-# Organize
+# Sprig
+
+![Sprig logo](organizer/logo.svg)
 
 A local project workspace with colorful cards, nested goals, and a little room for ideas.
 
@@ -29,7 +31,7 @@ uv run --no-dev python main.py --demo --port 8766
 ```
 
 Demo edits persist separately from your own projects. This is a source-based application,
-not a standalone executable or signed Windows installer. See the [v0.6.0 release notes](docs/releases/v0.6.0.md).
+not a standalone executable or signed Windows installer. See the [v0.7.0 release notes](docs/releases/v0.7.0.md).
 
 ## Local updates and browser refresh
 
@@ -54,7 +56,8 @@ the old server session. Saved projects remain in the separate local database.
 - JSON snapshot exchange, standalone HTML reports, and full database backups.
 - A [JSON command-line interface for AI agents](docs/agent-interface.md), sharing all UI validation.
 
-Drag a card by its grip to move between status columns, or use its action menu.
+Drag a card body, title or grip to move between status columns, or use its action menu.
+Clicking without dragging still opens its details.
 Within-column order is by stable ticket number; manual ordering is not saved.
 Click a card body or title to open centered details, edit fields, add children, or link related work.
 Empty lanes stay compact, with their message and Add item button just below the heading.
@@ -71,6 +74,16 @@ cancelled items, and descendants of cancelled parents. An undivided goal counts 
 Project keys can be renamed in **Edit project**. Every work item receives the new prefix together;
 numbers, internal identities, relationships and history stay intact. Old ticket labels no longer resolve,
 so agents should refresh their item lists after a rename. Branch prefixes are not included.
+
+**Color by Feature** starts enabled. Cards with assigned Features keep their project band and add a
+front band split evenly among those Features. Unassigned cards show only the project band; turn the
+toggle off for project-only coloring everywhere. Full cards use the project band across the top;
+condensed cards keep it along the left with the Feature band alongside. Feature labels remain available.
+
+Both bands default to **5 px**. Adjust **Preferences > Card color band thickness** from 3-10 px;
+the width and coloring toggle persist after restart. Feature colors are generated from the project's
+catalog with separated hues and a tint from the active palette. Renaming a Feature preserves its color;
+changing the catalog can rebalance colors. Color is an aid, not a unique identifier.
 
 ## Features
 
@@ -170,3 +183,10 @@ uv run python -m tests.browser_smoke
 The browser checks use a temporary database and write screenshots to ignored `artifacts/`.
 See [development status](docs/development-status.md) for validation and known limits,
 and [design decisions](docs/design.md) for the UI and data model.
+
+## Sprig name and compatibility
+
+Sprig is the new product name as of 0.7.0. The card-and-leaf logo is an original local SVG using the
+active theme colors; no external image/font service is needed. The existing repository/check-out name,
+`organizer` CLI module, `organize-snapshot` format and `%LOCALAPPDATA%/ProjectOrganize` storage location
+remain compatible. Existing data opens in place; renaming the product does not rename your projects.

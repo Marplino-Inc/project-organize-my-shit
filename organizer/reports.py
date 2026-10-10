@@ -39,7 +39,7 @@ def html_report(items):
     return f"""<!doctype html><html lang="en"><meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
-        <title>Organize — progress report</title><style>
+        <title>Sprig — progress report</title><style>
         body{{font:16px/1.6 system-ui,sans-serif;background:#f6f5f2;color:#252737;max-width:1000px;margin:40px auto;padding:0 24px}}
         article{{background:white;border:1px solid #dcdce6;border-left:4px solid #7357cc;border-radius:12px;padding:18px 24px;margin:16px 0;break-inside:avoid}}
         h2{{font-size:20px;margin:4px 0}}.meta{{color:#5d6070;font-size:13px}}.description{{white-space:pre-wrap;overflow-wrap:anywhere}}

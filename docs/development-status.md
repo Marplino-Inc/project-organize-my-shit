@@ -1,5 +1,22 @@
 # Development status
 
+## v0.7.0 - Sprig
+
+The app is now Sprig, with an original local card-and-leaf logo. Repository/module names,
+data paths, snapshot identifiers and agent commands remain compatible. No database migration.
+Color by Feature defaults on, with one front-band segment per assigned Feature and the project
+band retained. Unassigned items retain only the project band. Preferences saves a shared 3-10 px
+band width, default 5 px. Card bodies and titles support lane dragging; status menus remain available.
+
+Validation: 110 pytest checks and Ruff passed. The full Chromium suite passed all 48 themes.
+The dedicated Feature/Sprig workflow verified segmented bands, toggle and width persistence,
+both card densities, body/title dragging into empty lanes, ordinary clicks and retained memberships.
+Light/dark screenshots were inspected. The Windows source ZIP passed launcher, conflict, saved-data,
+preference persistence and automatic reconnect checks. The dirty-editor warning timed out on one run;
+a diagnostic rerun passed without an application change. Save/close editors before updating;
+the warning is not draft recovery. These are automated checks, not user acceptance.
+
+
 ## v0.6.0 ? overlapping project Features
 
 Implemented Features with names/descriptions on projects, optional multiple memberships on work items,

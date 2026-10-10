@@ -139,7 +139,9 @@ def main():
                 with sync_playwright() as p:
                     browser = p.chromium.launch()
                     page = browser.new_page()
+                    page.on("console", lambda message: print("Browser:", message.text, flush=True))
                     page.goto(url)
+                    expect(page).to_have_title("Sprig \u00b7 Your project workspace")
                     page.get_by_role("button", name="Create your first project", exact=True).click()
                     page.get_by_label("Title", exact=True).fill("Release persistence check")
                     page.get_by_label("Project key", exact=True).fill("REL")
@@ -167,6 +169,11 @@ def main():
                     slider.locator("[tabindex]").press("ArrowRight")
                     expect(slider).to_have_attribute("aria-valuenow", "2")
                     page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
+                    page.get_by_role("button", name="Preferences", exact=True).click()
+                    bands = page.get_by_role("slider", name="Card color band thickness", exact=True)
+                    bands.locator("[tabindex]").press("ArrowRight")
+                    expect(bands).to_have_attribute("aria-valuenow", "6")
+                    page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
                     # Verify the preference write completed before terminating the process.
                     page.reload()
                     expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
@@ -179,6 +186,9 @@ def main():
                     )
                     page.get_by_role("button", name="Preferences", exact=True).click()
                     expect(page.get_by_label("Theme palette", exact=True)).to_have_value("Shiny Mint")
+                    expect(
+                        page.get_by_role("slider", name="Card color band thickness", exact=True)
+                    ).to_have_attribute("aria-valuenow", "6")
                     expect(
                         page.get_by_role("slider", name="Field border thickness", exact=True)
                     ).to_have_attribute("aria-valuenow", "2")

@@ -126,3 +126,14 @@ unchanged. No new view, workflow or branch prefix. The current palette and typog
 Naming uses stable feature IDs so labels can change without rewriting assignments. Deleting an assigned
 feature is rejected; unassign it first. Browser-tested light/dark screenshots are local test artifacts,
 not proof of user acceptance.
+
+## v0.7.0 - Sprig finishing decisions
+
+The user explicitly chose a split Feature band for multiple memberships while retaining the project
+band. Color by Feature defaults on (implementation choice); unassigned cards show only their project
+band. Both bands default to 5 px, adjustable together from 3-10 px in Preferences. Feature colors
+are automatically spaced within the project catalog; catalog changes may rebalance colors. Full-card
+badges retain names and corresponding marks. Condensed cards retain ticket/title-only content.
+Mouse dragging starts on card bodies, titles or grips, with menu controls excluded; clicking still
+opens details. Empty lanes remain compact drop targets. Sprig and its card-and-leaf SVG are the
+authorized naming choice; existing data paths and agent contracts remain compatible.
