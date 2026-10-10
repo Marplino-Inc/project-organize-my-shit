@@ -1,0 +1,15 @@
+/* Tactical framing is decorative; hit targets and Feature bands stay intact. */
+body .main { background-image:linear-gradient(90deg,color-mix(in srgb,var(--accent) 5%,transparent) 1px,transparent 1px),linear-gradient(color-mix(in srgb,var(--accent) 5%,transparent) 1px,transparent 1px); background-size:48px 48px; }
+body .sidebar { border-right:2px solid var(--accent); background-image:linear-gradient(160deg,var(--surface),var(--canvas)); }
+body .hero,body .project-overview { border-top:3px solid var(--accent); border-bottom:1px solid var(--line); padding:16px 0; }
+body .hero h1,body .project-heading,body .dialog-heading { font-family:Bahnschrift,'Segoe UI',sans-serif; text-transform:uppercase; letter-spacing:2px; font-weight:600; }
+body .column-header,body .section-title h2 { font-family:Consolas,monospace; text-transform:uppercase; letter-spacing:1px; }
+body .ticket-card,body .project-card,body .stat,body .palette-sample { border-radius:0 14px 0 0; box-shadow:inset -2px -2px 0 color-mix(in srgb,var(--accent) 25%,transparent); }
+body .ticket-card::after,body .project-card::after { content:''; position:absolute; right:4px; bottom:4px; width:14px; height:10px; border-right:2px solid var(--accent); border-bottom:2px solid var(--accent); pointer-events:none; }
+body .project-card { position:relative; }
+body .board-column { border-radius:0; border-top:2px solid var(--line); background:color-mix(in srgb,var(--surface-soft) 85%,transparent); }
+body .primary-button,body .secondary-button,body .sidebar .q-btn,body .q-field--outlined .q-field__control,body .tag { border-radius:0 7px 0 0; }
+body .dialog-card { border:2px solid var(--accent); border-radius:0 20px 0 0 !important; box-shadow:0 0 0 5px var(--canvas); }
+body .ticket-card:hover { transform:none; box-shadow:inset 0 0 0 1px var(--accent),0 0 12px color-mix(in srgb,var(--accent) 18%,transparent); }
+
+@media (prefers-reduced-motion:reduce) { body .ticket-card,body .primary-button { transition:none !important; } }

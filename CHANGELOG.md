@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0 - Game-inspired styles and lane sorting
+
+- Add Persona 5, Destiny 2, Alien: Isolation, The Division, Halo and World of Warcraft full style presets.
+- Support both modes, compact/full cards, readable labels and reduced motion; keep the existing default.
+- Add persistent within-lane sorting by ticket number, title, Feature and recent update.
+- Expand project colors to twelve named choices with visible swatches; new colors require 1.1.0+ on import.
+- No database migration or JSON shape changes.
+
 ## 1.0.1 - Expanded palette library
 
 - Remove the decorative tilted stars tile from the workspace header.

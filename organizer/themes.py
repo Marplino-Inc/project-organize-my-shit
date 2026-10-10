@@ -2,7 +2,10 @@
 
 from colorsys import hls_to_rgb
 from hashlib import sha256
+from pathlib import Path
 
+from organizer.game_themes import GAME_THEMES
+from organizer.store import COLORS
 from organizer.theme_catalog import CATALOG
 
 FAMILIES = {
@@ -228,6 +231,7 @@ for key, name, hue, saturation in (
 
 
 FAMILIES.update(CATALOG)
+FAMILIES.update(GAME_THEMES)
 
 
 def css(family):
@@ -247,16 +251,19 @@ def css(family):
                 "q-primary": tokens["button"] + " !important",
             }
         )
-        for index, color in enumerate(theme["colors"]):
+        for index, (name, color) in enumerate(project_colors(family).items()):
             tokens[f"palette-{index}"] = color
+            tokens[f"project-{name}"] = color
         declarations = ";".join(f"--{name}:{value}" for name, value in tokens.items())
         selector = "body" if mode == "light" else "body.body--dark"
         result.append(f"{selector}{{{declarations}}}")
+    if family in GAME_THEMES:
+        result.append((Path(__file__).parent / "game_styles" / f"{family}.css").read_text(encoding="utf-8"))
     return "\n".join(result)
 
 
 def project_colors(family):
-    return dict(zip(("Violet", "Teal", "Amber", "Coral", "Blue"), FAMILIES[family]["colors"]))
+    return {**COLORS, **dict(zip(list(COLORS)[:5], FAMILIES[family]["colors"]))}
 
 
 def feature_colors(feature_ids):

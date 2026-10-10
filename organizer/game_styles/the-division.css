@@ -1,0 +1,15 @@
+/* HUD rails and glass outer layers; opaque reading surfaces. */
+body .main { background-image:linear-gradient(90deg,color-mix(in srgb,var(--accent) 7%,transparent) 1px,transparent 1px); background-size:72px 100%; }
+body .sidebar { border-right:3px solid var(--accent); background:color-mix(in srgb,var(--surface) 95%,transparent); }
+body .hero,body .project-overview { padding:15px 18px; border-left:5px solid var(--accent); border-bottom:1px solid var(--line); background:var(--accent-soft); }
+body .hero h1,body .project-heading,body .dialog-heading { font-family:Bahnschrift,'Arial Narrow','Segoe UI',sans-serif; text-transform:uppercase; letter-spacing:1px; }
+body .section-title h2,body .column-header { font-family:Consolas,monospace; text-transform:uppercase; letter-spacing:1px; }
+body .board-column { border-radius:0; border-left:2px solid var(--accent); background:color-mix(in srgb,var(--surface-soft) 80%,transparent); backdrop-filter:blur(6px); }
+body .ticket-card,body .project-card,body .stat,body .palette-sample { border-radius:1px; box-shadow:inset -3px 0 0 var(--line); }
+body .primary-button,body .secondary-button,body .q-field--outlined .q-field__control,body .tag { border-radius:1px; }
+body .stat-icon { border:2px solid var(--accent); border-radius:50%; background:transparent; }
+body .dialog-card { border:1px solid var(--accent); border-top:6px solid var(--accent); border-radius:1px !important; box-shadow:0 0 0 6px color-mix(in srgb,var(--surface) 65%,transparent); }
+body .q-dialog__backdrop { backdrop-filter:blur(4px); }
+body .ticket-card:hover { transform:none; box-shadow:inset -3px 0 0 var(--accent); }
+
+@media (prefers-reduced-motion:reduce) { body .ticket-card,body .primary-button { transition:none !important; } }

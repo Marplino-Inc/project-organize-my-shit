@@ -31,7 +31,7 @@ uv run --no-dev python main.py --demo --port 8766
 ```
 
 Demo edits persist separately from your own projects. This is a source-based application,
-not a standalone executable or signed Windows installer. See the [v1.0.1 release notes](docs/releases/v1.0.1.md).
+not a standalone executable or signed Windows installer. See the [v1.1.0 release notes](docs/releases/v1.1.0.md).
 
 ## Local updates and browser refresh
 
@@ -43,7 +43,7 @@ the old server session. Saved projects remain in the separate local database.
 
 ## What is included
 
-- 44 palettes, each with light and dark appearance, remembered between launches.
+- 50 palettes and style presets, each with light and dark appearance, remembered between launches.
 - Project colors and name/value tags, with compact cards and expandable details.
 - Projects → major goals → minor goals → tasks → subtasks, with optional skipped levels.
 - Ideas that do not count toward committed completion totals.
@@ -110,7 +110,7 @@ Changing a project default updates all items that inherit it. Add extra item-spe
 **Add tag**. **Copy defaults from project → Copy set** reuses another project's set; later edits to
 the source set do not change the copy. Filters use the effective name/value pair.
 
-Use **Preferences → Theme palette**, a non-editable dropdown, to select from 44 families. The palette's
+Use **Preferences → Theme palette**, a non-editable dropdown, to select from 50 families. The palette's
 source appears between the dropdown and the preview, which stays visible and updates in place.
 The toolbar has only **Light / Dark** appearance controls. Former System preferences start in Light.
 The original five palettes are joined by 19 authored tonal palettes. All assets remain local.
@@ -194,3 +194,19 @@ remain compatible. Existing data opens in place; renaming the product does not r
 The 1.0.1 palette additions include GGplot Gray Pastel, all 16 shinythemes families, Apple HIG,
 Microsoft Fluent and IBM Carbon. These are local color adaptations, each with Light/Dark variants,
 not full framework skins. See [palette sources and adaptation decisions](docs/theme-sources.md).
+
+
+Game-inspired presets: **Persona 5**, **Destiny 2**, **Alien: Isolation**, **The Division**, **Halo**,
+and **World of Warcraft** change typography, framing and surfaces as well as colors. Each has Light
+and Dark modes. Select them in Preferences; your existing default stays selected until you choose.
+See [game-style decisions](docs/game-themes.md).
+
+Use **Sort by** above the board for Ticket number (project key then numeric sequence), Title (A-Z),
+Feature (first alphabetical assigned name, unassigned last), or Recently updated (newest first).
+Sorting applies within each lane and is remembered. Feature ties use title, then ticket number;
+other ties use ticket number. Clearing filters keeps your sort choice. Dragging changes a card's
+lane/status; the destination lane still follows the selected sort instead of storing manual order.
+
+Project color now offers twelve named choices with swatches in the project editor. Rose, Orange,
+Lime, Cyan, Indigo, Pink and Slate keep their hues across themes; the original five remain theme-adapted.
+Snapshots using new colors require Sprig 1.1.0 or later to import. No database migration is needed.

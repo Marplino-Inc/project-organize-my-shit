@@ -7,6 +7,7 @@ from pathlib import Path
 from nicegui import ui
 
 from . import store, themes
+from .board_order import SORT_OPTIONS, ordered_items
 from .feature_editor import feature_editor
 from .reports import html_report
 from .tag_editor import tag_editor
@@ -65,6 +66,7 @@ def register(path, demo=False):
             "blocked": False,
             "sidebar_collapsed": store.setting(path, "sidebar_collapsed", "false") == "true",
             "signature": None,
+            "sort": store.setting(path, "board_sort", "number"),
         }
         data = {"items": [], "links": []}
 
@@ -252,6 +254,15 @@ def register(path, demo=False):
                         color = ui.select(
                             list(store.COLORS), label="Project color", value=initial.get("color", "Violet")
                         ).props("outlined")
+                        color.add_slot(
+                            "option",
+                            """
+                            <q-item v-bind="props.itemProps" role="option" :aria-label="props.opt.label">
+                              <q-item-section avatar><span :style="{background: 'var(--project-' + props.opt.label + ')', width:'18px', height:'18px', borderRadius:'3px', border:'1px solid var(--line)'}"></span></q-item-section>
+                              <q-item-section>{{ props.opt.label }}</q-item-section>
+                            </q-item>
+                        """,
+                        )
                     if item:
                         ui.label("Changing this key updates every work item in the project.").classes(
                             "form-hint"
@@ -896,7 +907,7 @@ def register(path, demo=False):
                         ui.label("Blocked").tooltip(item["blocked"] or "An unfinished item blocks this work.")
 
         def board(items):
-            items = [x for x in items if x["kind"] != "Project"]
+            items = ordered_items([x for x in items if x["kind"] != "Project"], data["items"], state["sort"])
             containers, cards = {}, {}
 
             def dropped(event):
@@ -1224,6 +1235,20 @@ def register(path, demo=False):
                         value=state["blocked"],
                         on_change=lambda e: change_filter("blocked", e.value),
                     ).props("dense")
+
+                    def change_sort(event):
+                        state["sort"] = event.value
+                        store.set_setting(path, "board_sort", event.value)
+                        work_area.refresh()
+
+                    ui.select(
+                        SORT_OPTIONS,
+                        label="Sort by",
+                        value=state["sort"] if state["sort"] in SORT_OPTIONS else "number",
+                        on_change=change_sort,
+                    ).props("outlined dense").classes("w-44").tooltip(
+                        "Within each lane. Feature uses the first alphabetical name; unassigned last."
+                    )
 
                     def clear_filters():
                         state.update(search="", tag=None, feature=None, kind=None, status=None, blocked=False)

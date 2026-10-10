@@ -145,6 +145,8 @@ def main():
                     page.get_by_role("button", name="Create your first project", exact=True).click()
                     page.get_by_label("Title", exact=True).fill("Release persistence check")
                     page.get_by_label("Project key", exact=True).fill("REL")
+                    page.get_by_label("Project color", exact=True).click()
+                    page.get_by_role("option", name="Cyan", exact=True).click()
                     page.get_by_role("dialog").get_by_text("Features", exact=True).click()
                     page.get_by_role("button", name="Add feature", exact=True).click()
                     page.get_by_label("Feature name", exact=True).fill("Interface")
@@ -161,9 +163,9 @@ def main():
                     expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
                     page.get_by_role("button", name="Preferences", exact=True).click()
                     page.get_by_label("Theme palette", exact=True).click()
-                    page.get_by_role("option", name="Shiny Mint", exact=True).click()
+                    page.get_by_role("option", name="World of Warcraft", exact=True).click()
                     page.wait_for_function(
-                        "getComputedStyle(document.body).getPropertyValue('--canvas').trim() === '#19231f'"
+                        "getComputedStyle(document.body).getPropertyValue('--canvas').trim() === '#191714'"
                     )
                     slider = page.get_by_role("slider", name="Field border thickness", exact=True)
                     slider.locator("[tabindex]").press("ArrowRight")
@@ -174,6 +176,8 @@ def main():
                     bands.locator("[tabindex]").press("ArrowRight")
                     expect(bands).to_have_attribute("aria-valuenow", "6")
                     page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
+                    page.get_by_label("Sort by", exact=True).click()
+                    page.get_by_role("option", name="Title", exact=True).click()
                     # Verify the preference write completed before terminating the process.
                     page.reload()
                     expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
@@ -185,7 +189,7 @@ def main():
                         "previous => window.clientId !== previous", arg=client_id, timeout=20000
                     )
                     page.get_by_role("button", name="Preferences", exact=True).click()
-                    expect(page.get_by_label("Theme palette", exact=True)).to_have_value("Shiny Mint")
+                    expect(page.get_by_label("Theme palette", exact=True)).to_have_value("World of Warcraft")
                     expect(
                         page.get_by_role("slider", name="Card color band thickness", exact=True)
                     ).to_have_attribute("aria-valuenow", "6")
@@ -199,6 +203,10 @@ def main():
                         )
                     ).to_be_visible()
                     expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
+                    expect(page.get_by_label("Sort by", exact=True)).to_have_value("Title")
+                    assert "Georgia" in page.locator(".hero h1").evaluate(
+                        "e => getComputedStyle(e).fontFamily"
+                    )
                     assert db.exists()
                     with closing(sqlite3.connect(db)) as saved_db:
                         definitions = json.loads(
@@ -207,6 +215,10 @@ def main():
                             ).fetchone()[0]
                         )
                         assert next(iter(definitions.values()))["name"] == "Interface"
+                        assert (
+                            saved_db.execute("SELECT color FROM items WHERE kind='Project'").fetchone()[0]
+                            == "Cyan"
+                        )
                     assert not list(app_root.rglob("*.db")), (
                         "Working data leaked into the application directory"
                     )
@@ -215,6 +227,14 @@ def main():
                     page.get_by_role("dialog").get_by_label("Title", exact=True).fill("Unsaved restart check")
                     page.wait_for_function("""window.did_handshake === true &&
                         document.querySelector('.item-editor[data-unsaved="true"]') !== null""")
+                    page.evaluate("""() => window.addEventListener('beforeunload', () => {
+                        console.log('Reload guard state: ' + JSON.stringify({
+                            active: navigator.userActivation.hasBeenActive,
+                            editors: [...document.querySelectorAll('.item-editor')].map(e => ({
+                                dirty:e.dataset.unsaved, visible:e.getClientRects().length > 0
+                            }))
+                        }));
+                    })""")
                     with page.expect_event("dialog", timeout=45000) as warning:
                         stop(process)
                         process = start()
