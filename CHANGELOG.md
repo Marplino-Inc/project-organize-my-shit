@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0
+
+- Define project Features with names and descriptions, and assign multiple Features to each work item.
+- Filter the existing board by Feature; full cards/details show memberships while condensed cards stay compact.
+- Feature names can change without changing tickets, parents, membership or completion counts.
+- Features are included in snapshots, read-only reports and agent contract v5.
+- Database v6 adds feature fields after backup; snapshot v4 retains compatibility with v1?v3 imports.
+
 ## 0.5.0
 
 - Darker text-field/dropdown backgrounds and a persistent 1?4 px field-border slider in Preferences.

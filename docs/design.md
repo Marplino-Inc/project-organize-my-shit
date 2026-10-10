@@ -113,3 +113,16 @@ contrast across all 48 theme/mode variants; user acceptance of this adjustment i
 
 Project-key changes propagate atomically to all items; identity, numbering and links remain stable.
 The user explicitly deferred branches, so this update adds no branch settings or prefixes.
+
+## v0.6.0 ? Features
+
+Approved direction: project-scoped Features with optional descriptions and overlapping work-item
+membership. Features are explicit assignments independent of the existing parent hierarchy. One item
+keeps one identity/status/progress contribution even when it appears under multiple Features.
+
+Use Edit project ? Features to manage definitions, a multi-select in item editors, and one selector
+above the existing board, defaulting to All work. Full cards/details show badges; condensed cards stay
+unchanged. No new view, workflow or branch prefix. The current palette and typography are preserved.
+Naming uses stable feature IDs so labels can change without rewriting assignments. Deleting an assigned
+feature is rejected; unassign it first. Browser-tested light/dark screenshots are local test artifacts,
+not proof of user acceptance.

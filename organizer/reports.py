@@ -2,7 +2,7 @@
 
 from html import escape
 
-from .store import effective_tags, now, progress, tag_text, ticket
+from .store import effective_tags, features_for, now, progress, tag_text, ticket
 
 
 def html_report(items):
@@ -15,9 +15,24 @@ def html_report(items):
     for item in items:
         parent = by_id.get(item["parent_id"])
         parent_text = f" · Under {esc(ticket(parent))}" if parent else ""
+        assigned = features_for(item, items)
+        feature_text = (
+            ("<p>Features: " + ", ".join(esc(x["name"]) for x in assigned.values()) + "</p>")
+            if assigned
+            else ""
+        )
+        if item["kind"] == "Project" and item["feature_definitions"]:
+            feature_text = (
+                "<p>Project features: "
+                + "; ".join(
+                    esc(x["name"]) + (": " + esc(x["description"]) if x["description"] else "")
+                    for x in item["feature_definitions"].values()
+                )
+                + "</p>"
+            )
         cards.append(f"""<article><p class="meta">{esc(ticket(item))} · {esc(item["kind"])}{parent_text}</p>
             <h2>{esc(item["title"])}</h2><p>{esc(item["status"])}</p>
-            <p class="description">{esc(item["description"])}</p>
+            <p class="description">{esc(item["description"])}</p>{feature_text}
             {('<p>Repository: <a href="' + esc(item["repository_url"]) + '">' + esc(item["repository_url"]) + "</a></p>") if item["repository_url"] else ""}
             <p>{" · ".join(esc(tag_text(name, value)) for name, value in effective_tags(item, items).items())}</p>
             {("<p>Blocked: " + esc(item["blocked"]) + "</p>") if item["blocked"] else ""}</article>""")

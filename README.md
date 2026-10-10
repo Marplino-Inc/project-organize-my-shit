@@ -29,7 +29,7 @@ uv run --no-dev python main.py --demo --port 8766
 ```
 
 Demo edits persist separately from your own projects. This is a source-based application,
-not a standalone executable or signed Windows installer. See the [v0.5.0 release notes](docs/releases/v0.5.0.md).
+not a standalone executable or signed Windows installer. See the [v0.6.0 release notes](docs/releases/v0.6.0.md).
 
 ## Local updates and browser refresh
 
@@ -72,6 +72,22 @@ Project keys can be renamed in **Edit project**. Every work item receives the ne
 numbers, internal identities, relationships and history stay intact. Old ticket labels no longer resolve,
 so agents should refresh their item lists after a rename. Branch prefixes are not included.
 
+## Features
+
+Open **Edit project ? Features** to add feature names and optional descriptions. In a work item's
+editor, select zero, one or several **Features**. The same task appears under each selected feature;
+its status, identity and project completion count remain shared. Features do not change parents or
+create another hierarchy. Membership is explicit on each work item, without automatic child inheritance.
+
+Use the **Feature** dropdown above the board to narrow the work shown; choose **All work** to see everything. New items
+created while a feature is selected start with that feature selected. Full cards show feature badges;
+condensed cards stay ticket-number/title only, with memberships available in details. Renaming a feature
+preserves assignments. Unassign it from all work items, including cancelled ones, before removing it.
+
+Features travel with JSON snapshots, reports and agent updates. Upgrading from 0.3?0.5 creates a sibling
+`*.pre-v0.6.0-*.db` backup before adding empty feature fields. Database v6 requires this version of the app;
+use the backup with older code to roll back. Snapshot v4 imports versions 1?3, defaulting to no features.
+
 ## Tags and themes
 
 Edit a project to define its **Project tag defaults**. Every default has a name and a value, or an
@@ -96,7 +112,7 @@ Stop the old app before starting the updated version. On first use, the app crea
 defaults; old work-item tags become null-valued local tags. Titles, IDs, descriptions, links, preferences,
 and activity are retained. Effort is removed from active storage and all interfaces; old values survive
 in the backup only. Do not open the migrated database with older code; use the pre-upgrade backup to
-roll back. New exports use snapshot version 3; version 1/2 snapshots still import, discarding effort.
+roll back. New exports use snapshot version 4; version 1/2 snapshots still import, discarding effort.
 Agents must stop writing effort; see the [current agent contract](docs/agent-interface.md).
 
 ### Startup troubleshooting

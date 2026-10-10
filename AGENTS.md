@@ -9,6 +9,7 @@
 - Preserve semantic text alongside color; provide keyboard alternatives to drag and drop.
 - Keep application rules in plain Python functions and SQL, separate from NiceGUI widgets.
 - Parent-child hierarchy and cross-project relationships are distinct. Never double-count parent and child work.
+- Features are project-scoped overlapping memberships, not parents or copied tasks. Keep ticket IDs stable and count each work item once. Membership does not inherit; unassign before deleting a Feature.
 - Snapshot import must validate before writing, be atomic, and never silently overwrite an existing project.
 - Use uv sync --locked, uv run pytest, and browser checks for UI behavior. Distinguish automated checks from user acceptance.
 - Do not claim installer packaging, performance, or visual acceptance without testing them.

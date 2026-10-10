@@ -137,3 +137,6 @@ body.body--dark .tag-amber { background:#443921; color:#efd093; }body.body--dark
 .board-column.empty-lane { min-height:0; }
 .empty-lane .ticket-list { min-height:12px; }
 .empty-lane .empty-column { padding:12px; }
+
+.feature-badge { max-width:100%; overflow-wrap:anywhere; background:var(--accent-soft); color:var(--text); border:1px solid var(--line); }
+.feature-editor-row { padding:8px; border:1px solid var(--line); border-radius:8px; }

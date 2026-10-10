@@ -28,3 +28,7 @@ select a palette from a non-editable dropdown while the accepted preview remains
 
 The next review should focus on daily task-tracking friction. Automated checks and accepted visual
 examples are useful evidence, but do not establish 1.0 readiness alone.
+
+October 10 follow-up: Features are approved as optional, overlapping work-item memberships within a
+project. Define names/descriptions, assign memberships, and filter the same board. They add no new
+hierarchy, status workflow, duplicated tasks, branch IDs or merge process. Keep condensed cards compact.
