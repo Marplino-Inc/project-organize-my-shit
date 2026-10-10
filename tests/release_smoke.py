@@ -9,6 +9,7 @@ import sqlite3
 import subprocess
 import tempfile
 import time
+from contextlib import closing
 from pathlib import Path
 from urllib.request import urlopen
 from zipfile import ZipFile
@@ -189,7 +190,7 @@ def main():
                     ).to_be_visible()
                     expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
                     assert db.exists()
-                    with sqlite3.connect(db) as saved_db:
+                    with closing(sqlite3.connect(db)) as saved_db:
                         definitions = json.loads(
                             saved_db.execute(
                                 "SELECT feature_definitions FROM items WHERE kind='Project'"
