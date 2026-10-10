@@ -193,13 +193,6 @@ def test_tags_normalized_and_ids_stable(workspace):
     assert child(path, root)["number"] == 3
 
 
-def test_project_key_change_is_rejected_by_shared_store(workspace):
-    path, root = workspace
-    with pytest.raises(ValueError, match="cannot change"):
-        store.save(path, {"project_key": "CHANGED"}, root["id"], root["revision"])
-    assert store.load(path)[0][0]["project_key"] == "TEST"
-
-
 @pytest.mark.parametrize("parent", [123, ["TEST-0001"], {"ticket": "TEST-0001"}])
 def test_cli_invalid_parent_returns_json_error(workspace, tmp_path, capsys, parent):
     path, _ = workspace

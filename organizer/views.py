@@ -58,7 +58,15 @@ def register(path, demo=False):
             )
 
         def refresh():
+            selected = next(
+                (x for x in data["items"] if x["kind"] == "Project" and x["project_key"] == state["project"]),
+                None,
+            )
             data["items"], data["links"] = store.load(path)
+            if selected:
+                state["project"] = next(
+                    (x["project_key"] for x in data["items"] if x["id"] == selected["id"]), None
+                )
             state["signature"] = signature(data["items"], data["links"])
             navigation.refresh()
             content.refresh()
@@ -197,7 +205,7 @@ def register(path, demo=False):
                             list(store.COLORS), label="Project color", value=initial.get("color", "Violet")
                         ).props("outlined")
                     if item:
-                        key_input.disable()
+                        ui.label("Changing this key updates every work item in the project.").classes("form-hint")
                     repo = (
                         ui.input(
                             "Repository URL (optional)",
@@ -345,6 +353,8 @@ def register(path, demo=False):
                         error_label.text = str(error)
                         return
                     dialog.close()
+                    if is_project and item and state["project"] == item["project_key"]:
+                        state["project"] = saved["project_key"]
                     ui.notify(f"Saved {store.ticket(saved)}", type="positive")
                     refresh()
 

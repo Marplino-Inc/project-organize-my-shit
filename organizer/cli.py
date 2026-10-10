@@ -47,10 +47,11 @@ def main(argv=None):
                 "schema": store.Item.model_json_schema(),
                 "read_only": ["id", "number", "created_at", "updated_at", "revision", "effective_tags"],
                 "tag_semantics": "tags stores local overrides; tag_defaults is project-only; effective_tags is computed. Replace the whole map when updating. Remove a local key to resume inheritance; null is an explicit value.",
-                "immutable_on_update": ["project_key"],
+                "immutable_on_update": [],
+                "project_key_semantics": "Rename on the Project only; updates all its items atomically and increments their revisions. Work items cannot move to another project.",
                 "project_statuses": store.PROJECT_STATUSES,
                 "work_statuses": store.STATUSES,
-                "api_version": 3,
+                "api_version": 4,
             }
         else:
             store.initialize(args.db)
@@ -90,8 +91,6 @@ def main(argv=None):
             elif args.command == "update":
                 item = resolve(args.ticket)
                 fields = payload()
-                if "project_key" in fields and fields["project_key"] != item["project_key"]:
-                    raise ValueError("Project keys cannot change on update.")
                 result = store.save(args.db, fields, item["id"], args.revision, actor=args.actor)
             elif args.command == "link":
                 store.add_link(args.db, resolve(args.source)["id"], resolve(args.target)["id"], args.kind)
