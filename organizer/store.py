@@ -19,6 +19,12 @@ COLORS = {"Violet": "#8b70ef", "Teal": "#24a99a", "Amber": "#d99a30", "Coral": "
 RANK = {"Project": 0, "Major goal": 1, "Minor goal": 2, "Task": 3, "Subtask": 4, "Idea": 4}
 
 
+class Feature(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True, str_strip_whitespace=True)
+    name: str = Field(min_length=1, max_length=80)
+    description: str = Field(default="", max_length=2000)
+
+
 class Item(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     id: str = Field(min_length=1, max_length=80)
@@ -42,12 +48,33 @@ class Item(BaseModel):
     ] = "Backlog"
     tags: dict[str, str | None] = Field(default_factory=dict, max_length=30)
     tag_defaults: dict[str, str | None] = Field(default_factory=dict, max_length=30)
+    feature_definitions: dict[str, Feature] = Field(default_factory=dict, max_length=50)
+    feature_ids: list[str] = Field(default_factory=list, max_length=50)
     color: Literal["Violet", "Teal", "Amber", "Coral", "Blue"] = "Violet"
     blocked: str = Field(default="", max_length=1000)
     repository_url: str = Field(default="", max_length=2000)
     created_at: str
     updated_at: str
     revision: int = Field(default=1, ge=1)
+
+    @field_validator("feature_definitions")
+    @classmethod
+    def valid_features(cls, features):
+        names = set()
+        for key, feature in features.items():
+            if not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", key):
+                raise ValueError("Feature IDs need 1–80 letters, numbers, underscores or hyphens.")
+            if feature.name.casefold() in names:
+                raise ValueError("Feature names must be unique within a project.")
+            names.add(feature.name.casefold())
+        return features
+
+    @field_validator("feature_ids")
+    @classmethod
+    def unique_feature_ids(cls, values):
+        if len(values) != len(set(values)):
+            raise ValueError("Assign each feature only once.")
+        return values
 
     @field_validator("tags", "tag_defaults")
     @classmethod
@@ -77,7 +104,7 @@ class Link(BaseModel):
 class Snapshot(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     format: Literal["organize-snapshot"] = "organize-snapshot"
-    version: Literal[3] = 3
+    version: Literal[4] = 4
     exported_at: str
     items: list[Item] = Field(max_length=10000)
     links: list[Link] = Field(max_length=30000)
@@ -117,11 +144,12 @@ def initialize(path):
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with transaction(path) as db:
         version = db.execute("PRAGMA user_version").fetchone()[0]
-        if version > 5:
+        if version > 6:
             raise ValueError("This database needs a newer version of Organize.")
-        if 0 < version < 5:
+        if 0 < version < 6:
             # Reserve writes while a second read connection makes the pre-migration backup.
-            destination = Path(path).with_name(f"{Path(path).stem}.pre-v0.3.0-{uuid4().hex[:8]}.db")
+            release = "0.3.0" if version < 5 else "0.6.0"
+            destination = Path(path).with_name(f"{Path(path).stem}.pre-v{release}-{uuid4().hex[:8]}.db")
             backup(path, destination)
         db.execute("""CREATE TABLE IF NOT EXISTS items (
             id TEXT PRIMARY KEY, project_key TEXT NOT NULL, number INTEGER NOT NULL,
@@ -131,6 +159,8 @@ def initialize(path):
             created_at TEXT NOT NULL, updated_at TEXT NOT NULL, revision INTEGER NOT NULL,
             repository_url TEXT NOT NULL DEFAULT '',
             tag_defaults TEXT NOT NULL DEFAULT '{}',
+            feature_definitions TEXT NOT NULL DEFAULT '{}',
+            feature_ids TEXT NOT NULL DEFAULT '[]',
             UNIQUE(project_key, number))""")
         db.execute("CREATE INDEX IF NOT EXISTS items_parent ON items(parent_id)")
         db.execute("""CREATE TABLE IF NOT EXISTS links (
@@ -163,7 +193,12 @@ def initialize(path):
         if 0 < version < 5:
             db.execute("ALTER TABLE items DROP COLUMN effort")
             db.execute("DELETE FROM settings WHERE key='effort_scale'")
-        db.execute("PRAGMA user_version=5")
+        if 0 < version < 6:
+            columns = {row[1] for row in db.execute("PRAGMA table_info(items)")}
+            for name, default in (("feature_definitions", "{}"), ("feature_ids", "[]")):
+                if name not in columns:
+                    db.execute(f"ALTER TABLE items ADD COLUMN {name} TEXT NOT NULL DEFAULT '{default}'")
+        db.execute("PRAGMA user_version=6")
 
 
 def read_items(db):
@@ -171,12 +206,22 @@ def read_items(db):
     for item in items:
         item["tags"] = json.loads(item["tags"])
         item["tag_defaults"] = json.loads(item["tag_defaults"])
+        item["feature_definitions"] = json.loads(item["feature_definitions"])
+        item["feature_ids"] = json.loads(item["feature_ids"])
     return items
 
 
 def load(path):
     with transaction(path) as db:
         return read_items(db), [dict(row) for row in db.execute("SELECT * FROM links")]
+
+
+def features_for(item, items):
+    root = next(
+        (x for x in items if x["kind"] == "Project" and x["project_key"] == item["project_key"]), None
+    )
+    definitions = root["feature_definitions"] if root else {}
+    return {key: definitions[key] for key in item["feature_ids"] if key in definitions}
 
 
 def effective_tags(item, items):
@@ -235,6 +280,10 @@ def validate_graph(items, links):
                 raise ValueError("Repository links must be HTTPS URLs without credentials, on projects only.")
         if item["kind"] != "Project" and item["tag_defaults"]:
             raise ValueError("Only projects can define default tags.")
+        if item["kind"] != "Project" and item["feature_definitions"]:
+            raise ValueError("Only projects can define features.")
+        if item["kind"] == "Project" and item["feature_ids"]:
+            raise ValueError("Assign features to work items, not projects.")
         key = (item["project_key"], item["number"])
         if key in keys:
             raise ValueError("Duplicate ticket numbers in a project.")
@@ -246,6 +295,11 @@ def validate_graph(items, links):
     for item in items:
         if item["project_key"] not in projects:
             raise ValueError("Every item must belong to an included project.")
+        definitions = by_id[projects[item["project_key"]]]["feature_definitions"]
+        if any(key not in definitions for key in item["feature_ids"]):
+            raise ValueError(
+                "Features must belong to this project. Remove their assignments before deleting a feature."
+            )
         if item["kind"] != "Project":
             parent = by_id.get(item["parent_id"])
             if not parent or parent["project_key"] != item["project_key"]:
@@ -268,8 +322,18 @@ def validate_graph(items, links):
         seen.add(identity)
 
 
+def storage_row(item):
+    return {
+        **item,
+        **{
+            key: json.dumps(item[key])
+            for key in ("tags", "tag_defaults", "feature_definitions", "feature_ids")
+        },
+    }
+
+
 def write_item(db, item):
-    row = {**item, "tags": json.dumps(item["tags"]), "tag_defaults": json.dumps(item["tag_defaults"])}
+    row = storage_row(item)
     columns = ",".join(row)
     markers = ",".join("?" for _ in row)
     # Only validated Item fields become column names. Values are always parameters.
@@ -286,6 +350,8 @@ def save(path, fields, item_id=None, revision=None, actor="You"):
         "status",
         "tags",
         "tag_defaults",
+        "feature_definitions",
+        "feature_ids",
         "color",
         "blocked",
         "repository_url",
@@ -363,7 +429,7 @@ def save(path, fields, item_id=None, revision=None, actor="You"):
                 (child["id"], actor, "project renamed", stamp, json.dumps(["project_key"])),
             )
         if existing:
-            row = {**item, "tags": json.dumps(item["tags"]), "tag_defaults": json.dumps(item["tag_defaults"])}
+            row = storage_row(item)
             db.execute(
                 "UPDATE items SET " + ",".join(f"{k}=?" for k in row) + " WHERE id=?",
                 (*row.values(), item["id"]),
@@ -468,6 +534,8 @@ def parse_snapshot(raw):
                 raise ValueError("Invalid legacy snapshot item.")
             item.pop("effort", None)
         payload["version"] = 3
+    if isinstance(payload, dict) and payload.get("version") == 3:
+        payload["version"] = 4
     snapshot = Snapshot.model_validate(payload)
     if not snapshot.items:
         raise ValueError("The snapshot contains no projects.")

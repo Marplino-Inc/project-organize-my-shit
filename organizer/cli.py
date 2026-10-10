@@ -45,13 +45,22 @@ def main(argv=None):
         if args.command == "schema":
             result = {
                 "schema": store.Item.model_json_schema(),
-                "read_only": ["id", "number", "created_at", "updated_at", "revision", "effective_tags"],
+                "read_only": [
+                    "id",
+                    "number",
+                    "created_at",
+                    "updated_at",
+                    "revision",
+                    "effective_tags",
+                    "features",
+                ],
                 "tag_semantics": "tags stores local overrides; tag_defaults is project-only; effective_tags is computed. Replace the whole map when updating. Remove a local key to resume inheritance; null is an explicit value.",
                 "immutable_on_update": [],
                 "project_key_semantics": "Rename on the Project only; updates all its items atomically and increments their revisions. Work items cannot move to another project.",
+                "feature_semantics": "feature_definitions is project-only: map stable IDs to {name, description}. Work items use feature_ids (zero or more IDs from that project). Replace whole maps/lists; unassign before removing a definition. Membership does not change parents, ticket IDs or status.",
                 "project_statuses": store.PROJECT_STATUSES,
                 "work_statuses": store.STATUSES,
-                "api_version": 4,
+                "api_version": 5,
             }
         else:
             store.initialize(args.db)
@@ -110,7 +119,11 @@ def main(argv=None):
             current, _ = store.load(args.db)
 
             def present(item):
-                return {**item, "effective_tags": store.effective_tags(item, current)}
+                return {
+                    **item,
+                    "effective_tags": store.effective_tags(item, current),
+                    "features": store.features_for(item, current),
+                }
 
             result = [present(x) for x in result] if isinstance(result, list) else present(result)
         print(json.dumps({"ok": True, "data": result}, ensure_ascii=True, indent=2))
