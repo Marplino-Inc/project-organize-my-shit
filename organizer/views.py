@@ -24,6 +24,9 @@ def register(path, demo=False):
     def workspace():
         client = ui.context.client
         ui.add_css((Path(__file__).parent / "styles.css").read_text(encoding="utf-8"))
+        ui.add_head_html(
+            "<script>" + (Path(__file__).parent / "browser.js").read_text(encoding="utf-8") + "</script>"
+        )
         ui.colors(primary="#7053c1", secondary="#24a99a", positive="#087e6e", negative="#b04447")
         preference = store.setting(path, "theme", "Light")
         if preference not in ("Light", "Dark"):
@@ -152,7 +155,7 @@ def register(path, demo=False):
         def update_status(item, status):
             try:
                 store.save(path, {"status": status}, item["id"], item["revision"])
-                ui.notify(f"{store.ticket(item)} â†’ {status}", type="positive")
+                ui.notify(f"{store.ticket(item)} → {status}", type="positive")
             except ValueError as error:
                 ui.notify(str(error), type="negative")
             refresh()
@@ -171,7 +174,7 @@ def register(path, demo=False):
                 or state["project"]
                 or next(iter(roots), "")
             )
-            with client.layout, ui.dialog() as dialog, ui.card().classes("dialog-card"):
+            with client.layout, ui.dialog() as dialog, ui.card().classes("dialog-card item-editor"):
                 ui.label(
                     ("Edit " + store.ticket(item))
                     if item
@@ -188,7 +191,7 @@ def register(path, demo=False):
                 if is_project:
                     with ui.element("div").classes("form-row"):
                         key_input = ui.input("Project key", value=initial.get("project_key", "")).props(
-                            "outlined hint='2â€“10 letters/numbers; e.g. TOOL'"
+                            "outlined hint='2–10 letters/numbers; e.g. TOOL'"
                         )
                         color = ui.select(
                             list(store.COLORS), label="Project color", value=initial.get("color", "Violet")
@@ -208,7 +211,7 @@ def register(path, demo=False):
                 else:
                     with ui.element("div").classes("form-row"):
                         project_select = ui.select(
-                            {k: f"{k} Â· {v['title']}" for k, v in roots.items()}, label="Project", value=key
+                            {k: f"{k} · {v['title']}" for k, v in roots.items()}, label="Project", value=key
                         ).props("outlined")
                         default_kind = "Subtask" if parent and parent["kind"] == "Task" else "Task"
                         kind_select = ui.select(
@@ -222,7 +225,7 @@ def register(path, demo=False):
 
                     def update_parents():
                         options = {
-                            x["id"]: f"{store.ticket(x)} Â· {x['title']}"
+                            x["id"]: f"{store.ticket(x)} · {x['title']}"
                             for x in all_items
                             if x["project_key"] == project_select.value
                             and store.RANK[x["kind"]] < store.RANK[kind_select.value]
@@ -259,7 +262,7 @@ def register(path, demo=False):
                         copy_from = (
                             ui.select(
                                 {
-                                    k: f"{k} Â· {v['title']}"
+                                    k: f"{k} · {v['title']}"
                                     for k, v in roots.items()
                                     if not item or v["id"] != item["id"]
                                 },
@@ -362,7 +365,7 @@ def register(path, demo=False):
                 ui.card().classes("dialog-card detail-card"),
             ):
                 with ui.row().classes("w-full items-center justify-between"):
-                    ui.label(f"{store.ticket(item)} Â· {item['kind']}").classes("project-key")
+                    ui.label(f"{store.ticket(item)} · {item['kind']}").classes("project-key")
                     ui.button(icon="close", on_click=dialog.close).props(
                         "flat round dense aria-label='Close details'"
                     )
@@ -372,12 +375,12 @@ def register(path, demo=False):
                     for name, value in store.effective_tags(item, items).items():
                         tag_label(name, value)
                 if item["repository_url"]:
-                    ui.link("Open repository â†—", item["repository_url"], new_tab=True).classes(
+                    ui.link("Open repository ↗", item["repository_url"], new_tab=True).classes(
                         "repo-link"
                     ).props("rel=noopener")
                 parent = by_id.get(item["parent_id"])
                 if parent:
-                    ui.label(f"Under {store.ticket(parent)} Â· {parent['title']}").classes("form-hint")
+                    ui.label(f"Under {store.ticket(parent)} · {parent['title']}").classes("form-hint")
                 if item["blocked"]:
                     ui.label("Blocked: " + item["blocked"]).classes("blocked")
                 ui.label(item["description"] or "No description yet.").classes("detail-description")
@@ -398,14 +401,14 @@ def register(path, demo=False):
                 children = [x for x in items if x["parent_id"] == item["id"]]
                 if children:
                     ui.separator()
-                    ui.label(f"Children Â· {len(children)}").classes("eyebrow")
+                    ui.label(f"Children · {len(children)}").classes("eyebrow")
                     for child in children:
 
                         def open_child(child=child):
                             dialog.close()
                             detail(child)
 
-                        ui.button(f"{store.ticket(child)} Â· {child['title']}", on_click=open_child).props(
+                        ui.button(f"{store.ticket(child)} · {child['title']}", on_click=open_child).props(
                             "flat no-caps"
                         ).classes("w-full justify-start")
                 ui.separator()
@@ -419,7 +422,7 @@ def register(path, demo=False):
                         else link["kind"]
                     )
                     with ui.row().classes("w-full items-center justify-between"):
-                        ui.label(f"{label} {store.ticket(other)} Â· {other['title']}").classes("text-sm")
+                        ui.label(f"{label} {store.ticket(other)} · {other['title']}").classes("text-sm")
 
                         def unlink(link=link):
                             store.remove_link(path, link)
@@ -441,7 +444,7 @@ def register(path, demo=False):
                     link_target = (
                         ui.select(
                             {
-                                x["id"]: f"{store.ticket(x)} Â· {x['title']}"
+                                x["id"]: f"{store.ticket(x)} · {x['title']}"
                                 for x in items
                                 if x["id"] != item["id"]
                             },
@@ -467,9 +470,9 @@ def register(path, demo=False):
                     for event in store.activity(path, item["id"]):
                         fields = ", ".join(json.loads(event["fields"]))
                         ui.label(
-                            f"{event['actor']} {event['action']} Â· {event['timestamp']} Â· {fields}"
+                            f"{event['actor']} {event['action']} · {event['timestamp']} · {fields}"
                         ).classes("form-hint")
-                ui.label(f"Updated {item['updated_at']} Â· Revision {item['revision']}").classes("form-hint")
+                ui.label(f"Updated {item['updated_at']} · Revision {item['revision']}").classes("form-hint")
             dialog.open()
 
         def sharing():
@@ -776,7 +779,7 @@ def register(path, demo=False):
             )
             ui.label(
                 f"{count} matching work items"
-                + (" Â· Cancelled items hidden" if state["status"] != "Cancelled" else "")
+                + (" · Cancelled items hidden" if state["status"] != "Cancelled" else "")
             ).classes("form-hint mb-3")
             board(items)
 
@@ -832,7 +835,7 @@ def register(path, demo=False):
                 done, total = store.progress(scope)
                 with ui.element("section").classes("project-overview"):
                     with ui.row().classes("w-full items-center justify-between"):
-                        ui.label("Project overview Â· " + store.ticket(selected)).classes("eyebrow")
+                        ui.label("Project overview · " + store.ticket(selected)).classes("eyebrow")
                         ui.button("Edit project", icon="edit", on_click=lambda: edit_dialog(selected)).props(
                             "flat dense"
                         )
@@ -840,7 +843,7 @@ def register(path, demo=False):
                     with ui.row().classes("items-center gap-2"):
                         ui.label(selected["status"]).classes("tag")
                         if selected["repository_url"]:
-                            ui.link("Open repository â†—", selected["repository_url"], new_tab=True).classes(
+                            ui.link("Open repository ↗", selected["repository_url"], new_tab=True).classes(
                                 "repo-link"
                             ).props("rel=noopener")
                     ui.label(
@@ -894,7 +897,7 @@ def register(path, demo=False):
                             else "A little structure. More room to make things happen."
                         ).classes("muted text-sm")
                         if selected and selected["repository_url"]:
-                            ui.link("Open repository â†—", selected["repository_url"], new_tab=True).classes(
+                            ui.link("Open repository ↗", selected["repository_url"], new_tab=True).classes(
                                 "repo-link"
                             ).props("rel=noopener")
                     with ui.element("div").classes("hero-symbol"):

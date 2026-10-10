@@ -159,12 +159,13 @@ def main():
                     # Verify the preference write completed before terminating the process.
                     page.reload()
                     expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
-                    browser.close()
+                    page.wait_for_function("window.did_handshake === true")
+                    client_id = page.evaluate("window.clientId")
                     stop(process)
                     process = start()
-                    browser = p.chromium.launch()
-                    page = browser.new_page()
-                    page.goto(url)
+                    page.wait_for_function(
+                        "previous => window.clientId !== previous", arg=client_id, timeout=20000
+                    )
                     page.get_by_role("button", name="Preferences", exact=True).click()
                     expect(page.get_by_label("Theme palette", exact=True)).to_have_value("Shiny Mint")
                     page.get_by_role("dialog").get_by_role("button", name="Done", exact=True).click()
@@ -178,6 +179,18 @@ def main():
                     assert not list(app_root.rglob("*.db")), (
                         "Working data leaked into the application directory"
                     )
+                    # A dirty editor must get a native warning, not silently disappear on restart.
+                    page.get_by_role("button", name="New project", exact=True).last.click()
+                    page.get_by_role("dialog").get_by_label("Title", exact=True).fill("Unsaved restart check")
+                    with page.expect_event("dialog", timeout=20000) as warning:
+                        stop(process)
+                        process = start()
+                    assert warning.value.type == "beforeunload"
+                    warning.value.dismiss()
+                    expect(page.get_by_role("dialog").get_by_label("Title", exact=True)).to_have_value(
+                        "Unsaved restart check"
+                    )
+                    page.close()
                     browser.close()
             finally:
                 stop(process)
@@ -186,7 +199,7 @@ def main():
             {
                 "ok": True,
                 "archive": str(args.archive),
-                "checks": "clean archive, Start.cmd, duplicate launch, port conflict, process restart, theme/data persistence",
+                "checks": "clean archive, Start.cmd, duplicate launch, port conflict, automatic reload after restart, theme/data persistence, unsaved-edit reload warning",
             }
         )
     )
