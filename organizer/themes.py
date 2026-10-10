@@ -1,10 +1,11 @@
 """Local theme tokens, adapted from palette families. No external theme assets required."""
 
 from colorsys import hls_to_rgb
+from hashlib import sha256
 
 FAMILIES = {
     "organize": {
-        "name": "Organize",
+        "name": "Sprig",
         "description": "The original violet workspace.",
         "source": "Original",
         "url": "",
@@ -251,3 +252,20 @@ def css(family):
 
 def project_colors(family):
     return dict(zip(("Violet", "Teal", "Amber", "Coral", "Blue"), FAMILIES[family]["colors"]))
+
+
+def feature_colors(feature_ids):
+    """Spread nearby hues within a project's catalog; names do not affect colors."""
+    hues, result = [], {}
+    for feature_id in feature_ids:
+        hue = int(sha256(feature_id.encode()).hexdigest()[:8], 16) % 360
+        if hues:
+
+            def separation(candidate):
+                return min(min(abs(candidate - other), 360 - abs(candidate - other)) for other in hues)
+
+            if separation(hue) < 40:
+                hue = max(((hue + step * 137.508) % 360 for step in range(24)), key=separation)
+        hues.append(hue)
+        result[feature_id] = f"color-mix(in srgb, hsl({hue:.2f} 68% 52%) 80%, var(--accent) 20%)"
+    return result

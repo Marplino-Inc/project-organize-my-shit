@@ -145,7 +145,7 @@ def initialize(path):
     with transaction(path) as db:
         version = db.execute("PRAGMA user_version").fetchone()[0]
         if version > 6:
-            raise ValueError("This database needs a newer version of Organize.")
+            raise ValueError("This database needs a newer version of Sprig.")
         if 0 < version < 6:
             # Reserve writes while a second read connection makes the pre-migration backup.
             release = "0.3.0" if version < 5 else "0.6.0"

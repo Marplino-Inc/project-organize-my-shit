@@ -44,6 +44,13 @@ def register(path, demo=False):
         field_style = ui.html(
             f"<style>body {{ --field-border-width:{border_width}px; }}</style>", sanitize=False
         ).classes("hidden")
+        try:
+            band_width = max(3, min(10, int(store.setting(path, "card_band_width", "5"))))
+        except ValueError:
+            band_width = 5
+        band_style = ui.html(
+            f"<style>body {{ --card-band-width:{band_width}px; }}</style>", sanitize=False
+        ).classes("hidden")
         theme_style = ui.html("<style>" + themes.css(palette) + "</style>", sanitize=False).classes("hidden")
         state = {
             "project": None,
@@ -54,6 +61,7 @@ def register(path, demo=False):
             "kind": None,
             "status": None,
             "condensed": store.setting(path, "board_density", "Full") == "Condensed",
+            "color_features": store.setting(path, "color_by_feature", "true") == "true",
             "blocked": False,
             "sidebar_collapsed": store.setting(path, "sidebar_collapsed", "false") == "true",
             "signature": None,
@@ -583,7 +591,7 @@ def register(path, demo=False):
                 def download_snapshot():
                     raw = store.export_snapshot(path, project)
                     omitted = json.loads(raw)["omitted_external_links"]
-                    ui.download.content(raw, f"organize-{project or 'workspace'}.json", "application/json")
+                    ui.download.content(raw, f"sprig-{project or 'workspace'}.json", "application/json")
                     if omitted:
                         ui.notify(
                             f"{omitted} relationship(s) to other projects omitted. Export all projects to retain them.",
@@ -595,7 +603,7 @@ def register(path, demo=False):
                     included = [x for x in items if not project or x["project_key"] == project]
                     ui.download.content(
                         html_report(included),
-                        f"organize-{project or 'workspace'}-report.html",
+                        f"sprig-{project or 'workspace'}-report.html",
                         "text/html",
                     )
 
@@ -606,7 +614,7 @@ def register(path, demo=False):
                     "secondary-button"
                 )
                 ui.label(
-                    "Reports open in a browser and can be printed to PDF. Snapshots can be imported into Organize."
+                    "Reports open in a browser and can be printed to PDF. Snapshots can be imported into Sprig."
                 ).classes("form-hint")
                 ui.separator()
                 ui.label("Import a snapshot").classes("eyebrow")
@@ -729,6 +737,21 @@ def register(path, demo=False):
                     "form-hint"
                 )
                 ui.separator()
+                ui.label("Card color band thickness").classes("eyebrow")
+
+                def change_bands(event):
+                    nonlocal band_width
+                    band_width = int(event.value)
+                    store.set_setting(path, "card_band_width", str(band_width))
+                    band_style.set_content(f"<style>body {{ --card-band-width:{band_width}px; }}</style>")
+
+                ui.slider(min=3, max=10, step=1, value=band_width, on_change=change_bands).props(
+                    "label label-always snap markers aria-label='Card color band thickness'"
+                ).classes("w-full")
+                ui.label("3–10 px. Adjusts both project and Feature bands; default 5 px.").classes(
+                    "form-hint"
+                )
+                ui.separator()
                 ui.label("Backup").classes("eyebrow")
                 ui.label(
                     "A complete SQLite backup includes all projects, relationships, preferences, and activity."
@@ -736,10 +759,10 @@ def register(path, demo=False):
 
                 def download_backup():
                     with tempfile.TemporaryDirectory() as directory:
-                        output = Path(directory) / "organize-backup.db"
+                        output = Path(directory) / "sprig-backup.db"
                         store.backup(path, output)
                         ui.download.content(
-                            output.read_bytes(), "organize-backup.db", "application/octet-stream"
+                            output.read_bytes(), "sprig-backup.db", "application/octet-stream"
                         )
 
                 ui.button("Download workspace backup", icon="save_alt", on_click=download_backup).classes(
@@ -755,9 +778,11 @@ def register(path, demo=False):
         def navigation():
             with ui.element("aside").classes("sidebar"):
                 with ui.element("div").classes("brand"):
-                    ui.icon("dashboard_customize", size="25px").classes("brand-mark")
+                    ui.html(
+                        (Path(__file__).parent / "logo.svg").read_text(encoding="utf-8"), sanitize=False
+                    ).classes("brand-logo")
                     with ui.column().classes("gap-0"):
-                        ui.label("organize").classes("brand-name")
+                        ui.label("Sprig").classes("brand-name")
                         ui.label("ROOM FOR YOUR IDEAS").style("font-size:8px;letter-spacing:1px").classes(
                             "muted"
                         )
@@ -795,6 +820,10 @@ def register(path, demo=False):
 
         def render_card(item, cards):
             by_id = {x["id"]: x for x in data["items"]}
+            root = next(
+                x for x in data["items"] if x["kind"] == "Project" and x["project_key"] == item["project_key"]
+            )
+            feature_colors = themes.feature_colors(root["feature_definitions"])
             with (
                 ui.element("article")
                 .classes("ticket-card")
@@ -806,6 +835,14 @@ def register(path, demo=False):
                     js_handler="event => { if (!event.target.closest('button, .drag-handle, .q-menu')) emit(); }",
                 )
                 cards[card.id] = item
+                assigned = store.features_for(item, data["items"])
+                if state["color_features"] and assigned:
+                    card.classes("has-feature-band")
+                    with ui.element("div").classes("feature-band").props("aria-hidden=true"):
+                        for key in sorted(assigned):
+                            ui.element("span").classes("feature-band-segment").style(
+                                "background:" + feature_colors[key]
+                            )
                 if state["condensed"]:
                     card.classes("condensed-card")
                     ui.label(store.ticket(item)).classes("ticket-id drag-handle").tooltip(
@@ -837,9 +874,15 @@ def register(path, demo=False):
                 if parent:
                     ui.label(parent["title"]).classes("ticket-context")
                 with ui.element("div").classes("tags"):
-                    assigned = list(store.features_for(item, data["items"]).values())
-                    for feature in assigned[:3]:
-                        ui.label(feature["name"]).classes("tag feature-badge").tooltip(feature["description"])
+                    assigned = list(store.features_for(item, data["items"]).items())
+                    for key, feature in assigned[:3]:
+                        badge = (
+                            ui.label(feature["name"])
+                            .classes("tag feature-badge")
+                            .tooltip(feature["description"])
+                        )
+                        if state["color_features"]:
+                            badge.style("border-left:3px solid " + feature_colors[key])
                     if len(assigned) > 3:
                         ui.label(f"+{len(assigned) - 3} features").classes("tag feature-badge")
                     effective = tags_for(item)
@@ -883,11 +926,19 @@ def register(path, demo=False):
                             containers[column.id] = status
                             for item in matches:
                                 render_card(item, cards)
+                            if not matches:
+                                ui.label("A little room for what's next.").classes("empty-column w-full")
                         column.make_sortable(
-                            group="board", on_end=dropped, handle=".drag-handle", options={"sort": False}
+                            group="board",
+                            on_end=dropped,
+                            options={
+                                "sort": False,
+                                "draggable": ".ticket-card",
+                                "filter": "button:not(.ticket-title), input, .q-menu",
+                                "preventOnFilter": False,
+                                "fallbackTolerance": 6,
+                            },
                         )
-                        if not matches:
-                            ui.label("A little room for what's next.").classes("empty-column")
                         ui.button(
                             "Add item", icon="add", on_click=lambda s=status: edit_dialog(status=s)
                         ).props("flat").classes("add-card")
@@ -1123,6 +1174,15 @@ def register(path, demo=False):
                     ui.switch("Condensed view", value=state["condensed"], on_change=change_density).props(
                         "dense"
                     )
+
+                    def change_feature_coloring(event):
+                        state["color_features"] = bool(event.value)
+                        store.set_setting(path, "color_by_feature", "true" if event.value else "false")
+                        work_area.refresh()
+
+                    ui.switch(
+                        "Color by Feature", value=state["color_features"], on_change=change_feature_coloring
+                    ).props("dense")
                     ui.button("New item", icon="add", on_click=edit_dialog).classes("primary-button")
                 with ui.element("div").classes("filters"):
                     ui.select(

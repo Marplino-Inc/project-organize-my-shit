@@ -28,6 +28,7 @@ def check(page, db):
     dialog.get_by_role("button", name="Save project", exact=True).click()
     expect(dialog).to_have_count(0)
     page.locator(".project-card").get_by_role("button", name="WoW addon", exact=True).click()
+    expect(page.locator(".project-overview")).to_contain_text("WoW addon")
     page.get_by_role("button", name="New item", exact=True).click()
     dialog.get_by_label("Title", exact=True).fill("Add themes")
     dialog.get_by_label("Features", exact=True).click()
@@ -73,6 +74,7 @@ def check(page, db):
     expect(page.locator(".ticket-card")).to_have_count(2)
     page.reload()
     page.locator(".project-card").get_by_role("button", name="WoW addon", exact=True).click()
+    expect(page.locator(".project-overview")).to_contain_text("WoW addon")
     page.get_by_label("Feature", exact=True).click()
     page.get_by_role("option", name="UI development", exact=True).click()
     expect(page.locator(".ticket-card")).to_have_count(0)
@@ -98,7 +100,7 @@ def check(page, db):
     dialog.get_by_role("button", name="Cancel", exact=True).click()
 
 
-def main():
+def main(checker=check):
     (ROOT / "artifacts").mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="organize-features-") as directory:
         db = Path(directory) / "workspace.db"
@@ -126,7 +128,7 @@ def main():
                     errors = []
                     page.on("pageerror", lambda e: errors.append(str(e)))
                     page.goto(url)
-                    check(page, db)
+                    checker(page, db)
                     assert not errors, errors
                     browser.close()
                 print("Feature browser workflow passed")

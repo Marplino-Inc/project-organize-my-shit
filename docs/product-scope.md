@@ -32,3 +32,7 @@ examples are useful evidence, but do not establish 1.0 readiness alone.
 October 10 follow-up: Features are approved as optional, overlapping work-item memberships within a
 project. Define names/descriptions, assign memberships, and filter the same board. They add no new
 hierarchy, status workflow, duplicated tasks, branch IDs or merge process. Keep condensed cards compact.
+
+The final requested development round is v0.7.0: Feature color bands, easier lane dragging and
+Sprig branding. This closes the authorized feature work. Future work should respond to an explicit
+request or concrete daily-use defect; completion of this round does not establish 1.0 readiness.

@@ -65,8 +65,9 @@ def check_field_preferences_and_rename(page, db, artifacts):
     page.set_viewport_size({"width": 1600, "height": 1000})
     page.get_by_role("button", name="Preferences", exact=True).click()
     slider = page.get_by_role("slider", name="Field border thickness", exact=True)
-    for _ in range(3):
+    for value in (2, 3, 4):
         slider.locator("[tabindex]").press("ArrowRight")
+        expect(slider).to_have_attribute("aria-valuenow", str(value))
     expect(slider).to_have_attribute("aria-valuenow", "4")
     control = (
         page.get_by_label("Theme palette", exact=True)
