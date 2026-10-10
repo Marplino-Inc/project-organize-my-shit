@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1 - Expanded palette library
+
+- Remove the decorative tilted stars tile from the workspace header.
+- Add GGplot Gray Pastel, all 16 shinythemes families, Apple HIG, Microsoft Fluent and IBM Carbon.
+- Every palette supports Light/Dark, with sources in the existing live Preferences preview.
+- Keep stored theme choices and data contracts unchanged; no database migration.
+- Version 1.0.1 follows 0.7.0 at the user's explicit request; no intervening 1.0.0 release is implied.
+
 ## 0.7.0 - Sprig
 
 - Rename the product to Sprig and add an original theme-aware card-and-leaf SVG logo and favicon.

@@ -1075,8 +1075,6 @@ def register(path, demo=False):
                             ui.link("Open repository ↗", selected["repository_url"], new_tab=True).classes(
                                 "repo-link"
                             ).props("rel=noopener")
-                    with ui.element("div").classes("hero-symbol"):
-                        ui.icon("auto_awesome", size="34px")
                 scope = selected_items()
                 leaves = store.active_leaves(scope)
                 done, total = store.progress(scope)

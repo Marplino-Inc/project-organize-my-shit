@@ -137,3 +137,10 @@ badges retain names and corresponding marks. Condensed cards retain ticket/title
 Mouse dragging starts on card bodies, titles or grips, with menu controls excluded; clicking still
 opens details. Empty lanes remain compact drop targets. Sprig and its card-and-leaf SVG are the
 authorized naming choice; existing data paths and agent contracts remain compatible.
+
+## v1.0.1 - Palette additions
+
+The user requested these additions after the v0.7.0 completion boundary. Remove the decorative
+workspace stars tile and expand only the existing palette library. See [theme sources](theme-sources.md)
+for the explicit choices, authored adaptations and validation boundary. Version 1.0.1 is user-specified;
+no historical release is renamed. Existing preferences, data paths and agent contracts remain intact.

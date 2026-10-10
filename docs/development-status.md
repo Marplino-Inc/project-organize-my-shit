@@ -1,5 +1,23 @@
 # Development status
 
+## v1.0.1 - Expanded palettes
+
+Removed the decorative workspace stars tile. Added 20 palette families: GGplot Gray Pastel, all
+16 shinythemes variants, Apple HIG, Microsoft Fluent and IBM Carbon. There are now 44 families /
+88 Light-Dark variants, all within the existing Preferences dropdown and live preview. Existing
+settings, data paths and agent contracts remain compatible; no database migration. Version 1.0.1
+is explicitly requested, following 0.7.0 without inventing an intervening release.
+
+Validation: 150 pytest checks and Ruff passed. The full Chromium suite passed all 88 variants,
+including rendered card/field contrast, darker field surfaces, source links, selection persistence,
+CRUD, lane dragging, external updates, exports and responsive layouts. GGplot Gray Pastel light,
+Apple HIG light and Carbon dark screenshots were inspected. Pure/near-black source foundations
+were adjusted where needed to keep the established darker-field treatment.
+The Windows source ZIP passed clean extraction, Start.cmd, duplicate-launch reuse, port-conflict
+diagnostics, saved data/theme/border persistence, automatic reconnect and unsaved-edit warning.
+These are automated checks and visual inspection, not user acceptance or a full accessibility audit.
+
+
 ## v0.7.0 - Sprig
 
 The app is now Sprig, with an original local card-and-leaf logo. Repository/module names,

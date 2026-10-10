@@ -56,7 +56,7 @@ def check_field_contrast(page):
         };
     }""")
     for i in (1, 3, 5):
-        assert int(values["background"][i : i + 2], 16) < int(values["canvas"][i : i + 2], 16)
+        assert int(values["background"][i : i + 2], 16) < int(values["canvas"][i : i + 2], 16), values
     for role in ("text", "label"):
         assert contrast(values[role], values["background"]) >= 4.5, values
 
