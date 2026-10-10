@@ -31,7 +31,7 @@ uv run --no-dev python main.py --demo --port 8766
 ```
 
 Demo edits persist separately from your own projects. This is a source-based application,
-not a standalone executable or signed Windows installer. See the [v0.7.0 release notes](docs/releases/v0.7.0.md).
+not a standalone executable or signed Windows installer. See the [v1.0.1 release notes](docs/releases/v1.0.1.md).
 
 ## Local updates and browser refresh
 
@@ -43,7 +43,7 @@ the old server session. Saved projects remain in the separate local database.
 
 ## What is included
 
-- 24 palettes, each with light and dark appearance, remembered between launches.
+- 44 palettes, each with light and dark appearance, remembered between launches.
 - Project colors and name/value tags, with compact cards and expandable details.
 - Projects → major goals → minor goals → tasks → subtasks, with optional skipped levels.
 - Ideas that do not count toward committed completion totals.
@@ -110,7 +110,7 @@ Changing a project default updates all items that inherit it. Add extra item-spe
 **Add tag**. **Copy defaults from project → Copy set** reuses another project's set; later edits to
 the source set do not change the copy. Filters use the effective name/value pair.
 
-Use **Preferences → Theme palette**, a non-editable dropdown, to select from 24 families. The palette's
+Use **Preferences → Theme palette**, a non-editable dropdown, to select from 44 families. The palette's
 source appears between the dropdown and the preview, which stays visible and updates in place.
 The toolbar has only **Light / Dark** appearance controls. Former System preferences start in Light.
 The original five palettes are joined by 19 authored tonal palettes. All assets remain local.
@@ -190,3 +190,7 @@ Sprig is the new product name as of 0.7.0. The card-and-leaf logo is an original
 active theme colors; no external image/font service is needed. The existing repository/check-out name,
 `organizer` CLI module, `organize-snapshot` format and `%LOCALAPPDATA%/ProjectOrganize` storage location
 remain compatible. Existing data opens in place; renaming the product does not rename your projects.
+
+The 1.0.1 palette additions include GGplot Gray Pastel, all 16 shinythemes families, Apple HIG,
+Microsoft Fluent and IBM Carbon. These are local color adaptations, each with Light/Dark variants,
+not full framework skins. See [palette sources and adaptation decisions](docs/theme-sources.md).

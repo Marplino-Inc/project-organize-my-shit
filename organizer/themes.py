@@ -3,6 +3,8 @@
 from colorsys import hls_to_rgb
 from hashlib import sha256
 
+from organizer.theme_catalog import CATALOG
+
 FAMILIES = {
     "organize": {
         "name": "Sprig",
@@ -223,6 +225,9 @@ for key, name, hue, saturation in (
     ("graphite", "Graphite", 250, 0.04),
 ):
     FAMILIES[key] = tonal_palette(name, hue, saturation)
+
+
+FAMILIES.update(CATALOG)
 
 
 def css(family):
