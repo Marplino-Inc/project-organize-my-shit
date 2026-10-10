@@ -31,7 +31,7 @@ uv run --no-dev python main.py --demo --port 8766
 ```
 
 Demo edits persist separately from your own projects. This is a source-based application,
-not a standalone executable or signed Windows installer. See the [v1.1.0 release notes](docs/releases/v1.1.0.md).
+not a standalone executable or signed Windows installer. See the [v1.2.0 release notes](docs/releases/v1.2.0.md).
 
 ## Local updates and browser refresh
 
@@ -125,7 +125,7 @@ Stop the old app before starting the updated version. On first use, the app crea
 defaults; old work-item tags become null-valued local tags. Titles, IDs, descriptions, links, preferences,
 and activity are retained. Effort is removed from active storage and all interfaces; old values survive
 in the backup only. Do not open the migrated database with older code; use the pre-upgrade backup to
-roll back. New exports use snapshot version 4; version 1/2 snapshots still import, discarding effort.
+roll back. New exports use snapshot version 5; versions 1-4 still import, discarding legacy effort.
 Agents must stop writing effort; see the [current agent contract](docs/agent-interface.md).
 
 ### Startup troubleshooting
@@ -210,3 +210,16 @@ lane/status; the destination lane still follows the selected sort instead of sto
 Project color now offers twelve named choices with swatches in the project editor. Rose, Orange,
 Lime, Cyan, Indigo, Pink and Slate keep their hues across themes; the original five remain theme-adapted.
 Snapshots using new colors require Sprig 1.1.0 or later to import. No database migration is needed.
+
+
+### Project descriptions and symbols (1.2.0)
+
+Write Markdown in **Edit project > Description**: `## Heading` makes a heading, and `- Item`
+makes a bullet. The overview renders it and expands to fit, pushing the board down.
+Turn on **Preferences > Project Description Scrollable** for the former compact scrolling box.
+In **Edit project > Project symbol**, choose from ten shapes/icons; the symbol uses the project
+color beside its name in the sidebar, overview and workspace cards.
+
+Stop the previous app before starting 1.2.0. The schema-7 upgrade creates a pre-upgrade backup
+of existing databases; a schema-6 database gets `*.pre-v1.2.0-*.db`. Use that backup with old code
+if rolling back. Snapshot format 5 requires 1.2.0+, while imports still accept formats 1-4.

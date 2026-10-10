@@ -96,7 +96,17 @@ body.body--dark .tag-amber { background:#443921; color:#efd093; }body.body--dark
 .condensed-board .empty-column { padding:12px 6px; }
 .project-overview { display:flex; flex-direction:column; gap:12px; margin-bottom:24px; }
 .project-heading { font-size:28px; font-weight:750; line-height:1.25; overflow-wrap:anywhere; }
-.project-description { white-space:pre-wrap; overflow-wrap:anywhere; font-size:14px; line-height:1.6; max-height:220px; overflow-y:auto; }
+.project-description { overflow-wrap:anywhere; font-size:14px; line-height:1.6; width:100%; min-width:0; }
+.project-description.scrollable { max-height:220px; overflow-y:auto; }
+.project-description h1, .project-description h2, .project-description h3 { line-height:1.3; font-weight:600; margin:16px 0 8px; }
+.project-description h1 { font-size:24px; }
+.project-description h2 { font-size:20px; }
+.project-description h3 { font-size:17px; }
+.project-description ul { list-style:disc; padding-left:24px; }
+.project-description ol { list-style:decimal; padding-left:24px; }
+.project-description pre { white-space:pre-wrap; overflow-wrap:anywhere; }
+.project-description > :first-child { margin-top:0; }
+.project-symbol { flex-shrink:0; }
 .project-overview .stats { margin:4px 0 0; }
 .palette-preview { width:100%; display:flex; flex-direction:column; gap:12px; padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--canvas); }
 .palette-sample { display:flex; flex-direction:column; gap:8px; background:var(--surface); border-left:3px solid var(--accent); border-radius:8px; padding:14px; }

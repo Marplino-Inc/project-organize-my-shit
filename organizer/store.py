@@ -29,6 +29,18 @@ COLORS = {
     "Pink": "#cb79c8",
     "Slate": "#8295a8",
 }
+PROJECT_SYMBOLS = {
+    "circle": "Circle",
+    "square": "Square",
+    "change_history": "Triangle",
+    "diamond": "Diamond",
+    "star": "Star",
+    "hexagon": "Hexagon",
+    "eco": "Leaf",
+    "code": "Code",
+    "sports_esports": "Game",
+    "build": "Tools",
+}
 RANK = {"Project": 0, "Major goal": 1, "Minor goal": 2, "Task": 3, "Subtask": 4, "Idea": 4}
 
 
@@ -77,6 +89,18 @@ class Item(BaseModel):
         "Pink",
         "Slate",
     ] = "Violet"
+    symbol: Literal[
+        "circle",
+        "square",
+        "change_history",
+        "diamond",
+        "star",
+        "hexagon",
+        "eco",
+        "code",
+        "sports_esports",
+        "build",
+    ] = "circle"
     blocked: str = Field(default="", max_length=1000)
     repository_url: str = Field(default="", max_length=2000)
     created_at: str
@@ -130,7 +154,7 @@ class Link(BaseModel):
 class Snapshot(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     format: Literal["organize-snapshot"] = "organize-snapshot"
-    version: Literal[4] = 4
+    version: Literal[5] = 5
     exported_at: str
     items: list[Item] = Field(max_length=10000)
     links: list[Link] = Field(max_length=30000)
@@ -170,11 +194,11 @@ def initialize(path):
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with transaction(path) as db:
         version = db.execute("PRAGMA user_version").fetchone()[0]
-        if version > 6:
+        if version > 7:
             raise ValueError("This database needs a newer version of Sprig.")
-        if 0 < version < 6:
+        if 0 < version < 7:
             # Reserve writes while a second read connection makes the pre-migration backup.
-            release = "0.3.0" if version < 5 else "0.6.0"
+            release = "0.3.0" if version < 5 else ("0.6.0" if version < 6 else "1.2.0")
             destination = Path(path).with_name(f"{Path(path).stem}.pre-v{release}-{uuid4().hex[:8]}.db")
             backup(path, destination)
         db.execute("""CREATE TABLE IF NOT EXISTS items (
@@ -224,7 +248,10 @@ def initialize(path):
             for name, default in (("feature_definitions", "{}"), ("feature_ids", "[]")):
                 if name not in columns:
                     db.execute(f"ALTER TABLE items ADD COLUMN {name} TEXT NOT NULL DEFAULT '{default}'")
-        db.execute("PRAGMA user_version=6")
+        columns = {row[1] for row in db.execute("PRAGMA table_info(items)")}
+        if "symbol" not in columns:
+            db.execute("ALTER TABLE items ADD COLUMN symbol TEXT NOT NULL DEFAULT 'circle'")
+        db.execute("PRAGMA user_version=7")
 
 
 def read_items(db):
@@ -304,6 +331,8 @@ def validate_graph(items, links):
                 or url.password
             ):
                 raise ValueError("Repository links must be HTTPS URLs without credentials, on projects only.")
+        if item["kind"] != "Project" and item.get("symbol", "circle") != "circle":
+            raise ValueError("Only projects can choose a symbol.")
         if item["kind"] != "Project" and item["tag_defaults"]:
             raise ValueError("Only projects can define default tags.")
         if item["kind"] != "Project" and item["feature_definitions"]:
@@ -379,6 +408,7 @@ def save(path, fields, item_id=None, revision=None, actor="You"):
         "feature_definitions",
         "feature_ids",
         "color",
+        "symbol",
         "blocked",
         "repository_url",
     }
@@ -562,6 +592,8 @@ def parse_snapshot(raw):
         payload["version"] = 3
     if isinstance(payload, dict) and payload.get("version") == 3:
         payload["version"] = 4
+    if isinstance(payload, dict) and payload.get("version") == 4:
+        payload["version"] = 5
     snapshot = Snapshot.model_validate(payload)
     if not snapshot.items:
         raise ValueError("The snapshot contains no projects.")

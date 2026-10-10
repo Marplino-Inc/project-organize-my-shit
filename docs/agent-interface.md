@@ -1,6 +1,6 @@
-# Agent interface, version 5
+# Agent interface, version 6
 
-Verified against Sprig 1.1.0. The CLI contract is version 5; snapshot format is version 4.
+Verified against Sprig 1.2.0. The CLI contract is version 6; snapshot format is version 5.
 
 Agents with access to the user's computer can use the CLI to read and update a workspace.
 The UI does not need to be running. No browser automation, separate server, or API token is needed.
@@ -107,11 +107,11 @@ Never write it back. Updating `tags` or `tag_defaults` replaces that whole map; 
 unrelated pairs. Changing defaults increments the project's revision, not its descendants' revisions.
 If your decision depends on a default value, re-read the project before acting.
 
-Snapshot version 4 stores defaults, overrides and Features separately and has no effort field. Import accepts
-version 1-3 snapshots and discards legacy effort values. For version 1 snapshots:
+Snapshot version 5 stores defaults, overrides and Features separately and has no effort field. Import accepts
+version 1-4 snapshots and discards legacy effort values. For version 1 snapshots:
 old project tags become null-valued defaults, and old work-item tags become null-valued local tags.
 Version 1 agents must use tag objects instead of arrays. Version 2 agents must stop writing `effort`;
-it is rejected as an unknown field. Schema discovery reports API version 5, without an effort property.
+it is rejected as an unknown field. Schema discovery reports API version 6, without an effort property.
 
 ## Link and exchange
 
@@ -128,7 +128,7 @@ not execute repository code, modify Git state, or create GitHub issues.
 
 ## Contract boundaries
 
-- Editable fields: `title`, `description`, `status`, `tags`, `tag_defaults` (projects only), `color`, `blocked`, `parent_id`, `kind`, `repository_url`, `feature_definitions` (projects only), `feature_ids` (work items only).
+- Editable fields: `title`, `description`, `status`, `tags`, `tag_defaults` (projects only), `color`, `symbol` (projects only), `blocked`, `parent_id`, `kind`, `repository_url`, `feature_definitions` (projects only), `feature_ids` (work items only).
 - `project_key` is required on creation. Update it on the Project record to rename all of its items atomically.
   Renaming rejects occupied/invalid keys and preserves UUIDs, numbers, parent links, relationships and history.
   Every affected revision increments, including cancelled items. Refetch after renaming; old labels no longer
@@ -178,3 +178,19 @@ alongside Violet, Teal, Amber, Coral and Blue. Use `schema` for the accepted val
 version. Snapshots with the new colors require 1.1.0 or later; earlier validators reject unknown colors.
 The JSON shape and database schema are unchanged. Board sorting is a presentation preference and
 does not change CLI list order, task numbers, relationships or stored statuses.
+
+
+## Project descriptions and symbols in Sprig 1.2.0
+
+Project descriptions remain plain Markdown source in JSON. The UI renders headings, lists and other
+Markdown; agents should preserve the source when editing. HTML is sanitized for display.
+`project_description_scrollable` is a local UI preference, off by default, not an item field.
+
+Projects accept `symbol`: `circle` (default), `square`, `change_history` (triangle), `diamond`,
+`star`, `hexagon`, `eco` (leaf), `code`, `sports_esports` (game), or `build` (tools).
+For example, update a project with `{"symbol":"eco","color":"Teal"}` using its current revision.
+Work items retain the default `circle` field; custom symbols are project-only.
+
+Database schema 7 adds the symbol column. Upgrading a schema-6 workspace first creates a sibling
+`*.pre-v1.2.0-*.db` backup. Snapshot format 5 includes symbols; formats 1-4 still import with circles
+when the symbol is absent. New exports require Sprig 1.2.0+; older apps cannot open the upgraded database.

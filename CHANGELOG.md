@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0 - Project descriptions and symbols
+
+- Render project descriptions as sanitized Markdown while retaining editable Markdown source.
+- Expand the project overview description by default; add persistent Project Description Scrollable preference.
+- Add ten project symbols using the selected project color in sidebar, overview and workspace cards.
+- Add agent-editable symbol field (CLI contract 6), database schema 7 with pre-migration backup,
+  and snapshot format 5 with import support for formats 1-4.
+
 ## 1.1.0 - Game-inspired styles and lane sorting
 
 - Add Persona 5, Destiny 2, Alien: Isolation, The Division, Halo and World of Warcraft full style presets.

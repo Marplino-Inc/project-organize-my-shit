@@ -63,6 +63,8 @@ def register(path, demo=False):
             "status": None,
             "condensed": store.setting(path, "board_density", "Full") == "Condensed",
             "color_features": store.setting(path, "color_by_feature", "true") == "true",
+            "description_scrollable": store.setting(path, "project_description_scrollable", "false")
+            == "true",
             "blocked": False,
             "sidebar_collapsed": store.setting(path, "sidebar_collapsed", "false") == "true",
             "signature": None,
@@ -263,6 +265,24 @@ def register(path, demo=False):
                             </q-item>
                         """,
                         )
+                    symbol = (
+                        ui.select(
+                            store.PROJECT_SYMBOLS,
+                            label="Project symbol",
+                            value=initial.get("symbol", "circle"),
+                        )
+                        .props("outlined")
+                        .classes("w-full")
+                    )
+                    symbol.add_slot(
+                        "option",
+                        """
+                        <q-item v-bind="props.itemProps" role="option" :aria-label="props.opt.label">
+                          <q-item-section avatar><q-icon :name="props.opt.value" /></q-item-section>
+                          <q-item-section>{{ props.opt.label }}</q-item-section>
+                        </q-item>
+                    """,
+                    )
                     if item:
                         ui.label("Changing this key updates every work item in the project.").classes(
                             "form-hint"
@@ -438,6 +458,7 @@ def register(path, demo=False):
                             kind="Project",
                             project_key=key_input.value,
                             color=color.value,
+                            symbol=symbol.value,
                             repository_url=repo.value.strip(),
                             feature_definitions=read_features(),
                         )
@@ -498,7 +519,10 @@ def register(path, demo=False):
                     ui.label(f"Under {store.ticket(parent)} · {parent['title']}").classes("form-hint")
                 if item["blocked"]:
                     ui.label("Blocked: " + item["blocked"]).classes("blocked")
-                ui.label(item["description"] or "No description yet.").classes("detail-description")
+                if item["kind"] == "Project":
+                    ui.markdown(item["description"] or "No description yet.").classes("project-description")
+                else:
+                    ui.label(item["description"] or "No description yet.").classes("detail-description")
 
                 def edit():
                     dialog.close()
@@ -763,6 +787,21 @@ def register(path, demo=False):
                     "form-hint"
                 )
                 ui.separator()
+
+                def change_description_scroll(event):
+                    state["description_scrollable"] = bool(event.value)
+                    store.set_setting(path, "project_description_scrollable", str(bool(event.value)).lower())
+                    content.refresh()
+
+                ui.switch(
+                    "Project Description Scrollable",
+                    value=state["description_scrollable"],
+                    on_change=change_description_scroll,
+                )
+                ui.label(
+                    "Off by default: the full description expands the page. On: scroll within a compact box."
+                ).classes("form-hint")
+                ui.separator()
                 ui.label("Backup").classes("eyebrow")
                 ui.label(
                     "A complete SQLite backup includes all projects, relationships, preferences, and activity."
@@ -810,9 +849,9 @@ def register(path, demo=False):
                                 "w-full " + ("nav-active" if root["project_key"] == state["project"] else "")
                             )
                         ):
-                            ui.element("span").classes("status-dot").style(
-                                "background:" + project_color(root)
-                            )
+                            ui.icon(root["symbol"], size="18px").classes("project-symbol").style(
+                                "color:" + project_color(root)
+                            ).props("aria-hidden=true")
                             ui.label(root["title"]).classes("ellipsis text-xs")
                     ui.button("New project", icon="add", on_click=lambda: edit_dialog(project=True)).props(
                         "flat"
@@ -1025,16 +1064,22 @@ def register(path, demo=False):
                         ui.button("Edit project", icon="edit", on_click=lambda: edit_dialog(selected)).props(
                             "flat dense"
                         )
-                    ui.label(selected["title"]).classes("project-heading")
+                    with ui.row().classes("items-center gap-3"):
+                        ui.icon(selected["symbol"], size="26px").classes("project-symbol").style(
+                            "color:" + project_color(selected)
+                        ).props("aria-hidden=true")
+                        ui.label(selected["title"]).classes("project-heading")
                     with ui.row().classes("items-center gap-2"):
                         ui.label(selected["status"]).classes("tag")
                         if selected["repository_url"]:
                             ui.link("Open repository ↗", selected["repository_url"], new_tab=True).classes(
                                 "repo-link"
                             ).props("rel=noopener")
-                    ui.label(
+                    ui.markdown(
                         selected["description"] or "No project description yet. Add one with Edit project."
-                    ).classes("project-description")
+                    ).classes(
+                        "project-description" + (" scrollable" if state["description_scrollable"] else "")
+                    )
                     with ui.row().classes("gap-2"):
                         for name, value in tags_for(selected).items():
                             tag_label(name, value)
@@ -1157,10 +1202,14 @@ def register(path, demo=False):
                                 ui.button(icon="open_in_new", on_click=lambda x=project: detail(x)).props(
                                     f"flat round dense size=xs aria-label='Open {project['project_key']} project details'"
                                 )
-                            ui.button(
-                                project["title"],
-                                on_click=lambda key=project["project_key"]: choose_project(key),
-                            ).props("flat").classes("project-title")
+                            with ui.row().classes("items-center gap-2"):
+                                ui.icon(project["symbol"], size="22px").classes("project-symbol").style(
+                                    "color:" + project_color(project)
+                                ).props("aria-hidden=true")
+                                ui.button(
+                                    project["title"],
+                                    on_click=lambda key=project["project_key"]: choose_project(key),
+                                ).props("flat").classes("project-title")
                             ui.label(project["status"]).classes("tag self-start mt-2")
                             with ui.element("div").classes("progress-track"):
                                 ui.element("div").classes("progress-fill").style(

@@ -1,5 +1,18 @@
 # Development status
 
+## v1.2.0 - Markdown and project symbols
+
+- Render project descriptions as sanitized Markdown while retaining editable Markdown source.
+- Expand the project overview description by default; add persistent Project Description Scrollable preference.
+- Add ten project symbols using the selected project color in sidebar, overview and workspace cards.
+- Add agent-editable symbol field (CLI contract 6), database schema 7 with pre-migration backup,
+  and snapshot format 5 with import support for formats 1-4.
+
+Validation: 181 pytest checks passed. A dedicated browser workflow verified headings/bullets,
+HTML sanitization, expanded flow, scrolling preference persistence, unchanged Markdown in the editor,
+symbol selection and project-color rendering. Migration backups and legacy imports have automated
+coverage. These checks use isolated workspaces, not personal data or user acceptance.
+
 ## v1.1.0 - Game styles, lane sorting and project colors
 
 Implemented six explicitly requested full style presets with game-name labels, both modes and

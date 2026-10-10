@@ -60,7 +60,7 @@ def main(argv=None):
                 "feature_semantics": "feature_definitions is project-only: map stable IDs to {name, description}. Work items use feature_ids (zero or more IDs from that project). Replace whole maps/lists; unassign before removing a definition. Membership does not change parents, ticket IDs or status.",
                 "project_statuses": store.PROJECT_STATUSES,
                 "work_statuses": store.STATUSES,
-                "api_version": 5,
+                "api_version": 6,
             }
         else:
             store.initialize(args.db)

@@ -37,5 +37,5 @@ def test_agents_cannot_read_or_write_effort(workspace, capsys):
         child(path, root, effort=2)
     assert cli(["schema"]) == 0
     result = json.loads(capsys.readouterr().out)["data"]
-    assert result["api_version"] == 5
+    assert result["api_version"] == 6
     assert "effort" not in result["schema"]["properties"]

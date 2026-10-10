@@ -109,7 +109,7 @@ def test_features_roundtrip_copies_legacy_and_invalid_snapshots(workspace):
     root = define(path, root)
     child(path, root, feature_ids=["ui", "access"])
     exported = store.export_snapshot(path)
-    assert json.loads(exported)["version"] == 4
+    assert json.loads(exported)["version"] == 5
     store.import_snapshot(path, exported, new_key="COPY")
     items, _ = store.load(path)
     copied = next(x for x in items if x["project_key"] == "COPY" and x["kind"] == "Task")
