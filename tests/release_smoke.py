@@ -5,6 +5,7 @@ import json
 import os
 import re
 import socket
+import sqlite3
 import subprocess
 import tempfile
 import time
@@ -141,6 +142,12 @@ def main():
                     page.get_by_role("button", name="Create your first project", exact=True).click()
                     page.get_by_label("Title", exact=True).fill("Release persistence check")
                     page.get_by_label("Project key", exact=True).fill("REL")
+                    page.get_by_role("dialog").get_by_text("Features", exact=True).click()
+                    page.get_by_role("button", name="Add feature", exact=True).click()
+                    page.get_by_label("Feature name", exact=True).fill("Interface")
+                    page.get_by_label("Feature description (optional)", exact=True).fill(
+                        "Saved feature definition"
+                    )
                     page.get_by_role("button", name="Save project", exact=True).click()
                     expect(page.get_by_role("dialog")).to_have_count(0)
                     expect(page.locator(".project-card")).to_have_count(1)
@@ -182,6 +189,13 @@ def main():
                     ).to_be_visible()
                     expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
                     assert db.exists()
+                    with sqlite3.connect(db) as saved_db:
+                        definitions = json.loads(
+                            saved_db.execute(
+                                "SELECT feature_definitions FROM items WHERE kind='Project'"
+                            ).fetchone()[0]
+                        )
+                        assert next(iter(definitions.values()))["name"] == "Interface"
                     assert not list(app_root.rglob("*.db")), (
                         "Working data leaked into the application directory"
                     )

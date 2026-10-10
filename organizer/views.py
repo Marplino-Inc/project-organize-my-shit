@@ -7,6 +7,7 @@ from pathlib import Path
 from nicegui import ui
 
 from . import store, themes
+from .feature_editor import feature_editor
 from .reports import html_report
 from .tag_editor import tag_editor
 
@@ -49,6 +50,7 @@ def register(path, demo=False):
             "stage": None,
             "search": "",
             "tag": None,
+            "feature": None,
             "kind": None,
             "status": None,
             "condensed": store.setting(path, "board_density", "Full") == "Condensed",
@@ -80,6 +82,7 @@ def register(path, demo=False):
 
         def choose_project(key):
             state["project"] = key
+            state["feature"] = None
             state["stage"] = None
             refresh()
 
@@ -103,6 +106,7 @@ def register(path, demo=False):
                 x
                 for x in selected_items()
                 if (not state["kind"] or x["kind"] == state["kind"])
+                and (not state["feature"] or state["feature"] in feature_options_for(x))
                 and (not state["tag"] or state["tag"] in store.tag_options([x], data["items"]))
                 and (not state["status"] or x["status"] == state["status"])
                 and (not state["blocked"] or is_blocked(x))
@@ -135,6 +139,26 @@ def register(path, demo=False):
 
         def tags_for(item):
             return store.effective_tags(item, data["items"])
+
+        def feature_options_for(item):
+            root = next(
+                (
+                    x
+                    for x in data["items"]
+                    if x["kind"] == "Project" and x["project_key"] == item["project_key"]
+                ),
+                None,
+            )
+            return [f"{root['id']}:{key}" for key in item["feature_ids"]] if root else []
+
+        def feature_options():
+            return {
+                f"{root['id']}:{key}": ("" if state["project"] else root["project_key"] + " · ")
+                + feature["name"]
+                for root in selected_items()
+                if root["kind"] == "Project"
+                for key, feature in root["feature_definitions"].items()
+            }
 
         def project_color(item):
             root = next(
@@ -183,10 +207,19 @@ def register(path, demo=False):
                 edit_dialog(project=True)
                 return
             initial = item or {}
+            feature_project = next(
+                (
+                    k
+                    for k, root in roots.items()
+                    if state["feature"] and state["feature"].startswith(root["id"] + ":")
+                ),
+                None,
+            )
             key = (
                 initial.get("project_key")
                 or (parent and parent["project_key"])
                 or state["project"]
+                or feature_project
                 or next(iter(roots), "")
             )
             with client.layout, ui.dialog() as dialog, ui.card().classes("dialog-card item-editor"):
@@ -268,6 +301,46 @@ def register(path, demo=False):
                     .classes("w-full")
                 )
                 if is_project:
+                    with ui.expansion("Features", value=False).classes("w-full"):
+                        used_ids = {
+                            key
+                            for x in all_items
+                            if x["project_key"] == initial.get("project_key")
+                            for key in x["feature_ids"]
+                        }
+                        read_features = feature_editor(initial.get("feature_definitions", {}), used_ids)
+                else:
+                    selected_features = initial.get("feature_ids", [])
+                    if not item and state["feature"]:
+                        root_id, feature_id = state["feature"].split(":", 1)
+                        if roots[project_select.value]["id"] == root_id:
+                            selected_features = [feature_id]
+                    feature_select = (
+                        ui.select(
+                            {
+                                k: v["name"]
+                                for k, v in roots[project_select.value]["feature_definitions"].items()
+                            },
+                            label="Features",
+                            multiple=True,
+                            value=selected_features,
+                        )
+                        .props("outlined use-chips clearable")
+                        .classes("w-full")
+                    )
+                    ui.label("Optional. Choose one or more; manage features in Edit project.").classes(
+                        "form-hint"
+                    )
+
+                    def update_feature_project():
+                        options = {
+                            k: v["name"]
+                            for k, v in roots[project_select.value]["feature_definitions"].items()
+                        }
+                        feature_select.set_options(options, value=[])
+
+                    project_select.on_value_change(update_feature_project)
+                if is_project:
                     ui.label("Project tag defaults").classes("eyebrow")
                     ui.label(
                         "Applied to this project and all its work items. Items can override a value or explicitly use null."
@@ -347,12 +420,14 @@ def register(path, demo=False):
                             project_key=key_input.value,
                             color=color.value,
                             repository_url=repo.value.strip(),
+                            feature_definitions=read_features(),
                         )
                     else:
                         fields.update(
                             kind=kind_select.value,
                             project_key=project_select.value,
                             parent_id=parent_select.value,
+                            feature_ids=feature_select.value or [],
                         )
                     try:
                         saved = store.save(
@@ -393,6 +468,8 @@ def register(path, demo=False):
                     ui.label(item["status"]).classes("tag")
                     for name, value in store.effective_tags(item, items).items():
                         tag_label(name, value)
+                    for feature in store.features_for(item, items).values():
+                        ui.label(feature["name"]).classes("tag feature-badge").tooltip(feature["description"])
                 if item["repository_url"]:
                     ui.link("Open repository ↗", item["repository_url"], new_tab=True).classes(
                         "repo-link"
@@ -760,6 +837,11 @@ def register(path, demo=False):
                 if parent:
                     ui.label(parent["title"]).classes("ticket-context")
                 with ui.element("div").classes("tags"):
+                    assigned = list(store.features_for(item, data["items"]).values())
+                    for feature in assigned[:3]:
+                        ui.label(feature["name"]).classes("tag feature-badge").tooltip(feature["description"])
+                    if len(assigned) > 3:
+                        ui.label(f"+{len(assigned) - 3} features").classes("tag feature-badge")
                     effective = tags_for(item)
                     for name, value in list(effective.items())[:3]:
                         tag_label(name, value)
@@ -825,6 +907,8 @@ def register(path, demo=False):
 
         @ui.refreshable
         def content():
+            if state["feature"] not in feature_options():
+                state["feature"] = None
             roots = [x for x in data["items"] if x["kind"] == "Project"]
             selected = next((x for x in roots if x["project_key"] == state["project"]), None)
             with ui.element("div").classes("topbar"):
@@ -1041,6 +1125,12 @@ def register(path, demo=False):
                     )
                     ui.button("New item", icon="add", on_click=edit_dialog).classes("primary-button")
                 with ui.element("div").classes("filters"):
+                    ui.select(
+                        feature_options(),
+                        label="Feature",
+                        value=state["feature"],
+                        on_change=lambda e: change_filter("feature", e.value),
+                    ).props("outlined dense clearable placeholder='All work'").classes("w-48")
                     search = (
                         ui.input(
                             "Search work",
@@ -1078,7 +1168,7 @@ def register(path, demo=False):
                     ).props("dense")
 
                     def clear_filters():
-                        state.update(search="", tag=None, kind=None, status=None, blocked=False)
+                        state.update(search="", tag=None, feature=None, kind=None, status=None, blocked=False)
                         content.refresh()
 
                     ui.button("Clear", on_click=clear_filters).props("flat dense").classes("text-xs muted")
