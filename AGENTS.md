@@ -36,3 +36,8 @@ Sprig is the display name. Preserve the existing repository/module names, Projec
 directory and protocol identifiers. Color by Feature uses one segment per membership, never copied
 work items. Keep status-menu alternatives to mouse dragging. The requested development round ends
 at v0.7.0; do not propose more features without a new request.
+
+## Two maintained editions
+
+Follow docs/branch-maintenance.md when changing shared behavior. Main and work both remain active;
+work-item Features remain personal-only. Analytics/mapping are deferred until explicitly requested.
