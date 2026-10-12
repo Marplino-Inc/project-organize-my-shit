@@ -170,14 +170,14 @@ def initialize(path):
     if Path(path).is_symlink():
         raise ValueError("Use a real workspace file, not a symbolic link.")
     Path(path).parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    if os.name == "posix" and Path(path).exists():
-        Path(path).chmod(0o600)
     with transaction(path) as db:
         version = db.execute("PRAGMA user_version").fetchone()[0]
         application = db.execute("PRAGMA application_id").fetchone()[0]
         tables = db.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
         if tables and application != 1398231627:
             raise ValueError("Not a Sprig Work database. Personal Sprig databases cannot be opened here.")
+        if os.name == "posix":
+            Path(path).chmod(0o600)
         if version > 1:
             raise ValueError("This workspace requires a newer Sprig Work version.")
         db.execute("""CREATE TABLE IF NOT EXISTS items (
