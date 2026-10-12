@@ -1,0 +1,27 @@
+{
+  "review_date": "2026-10-12",
+  "code_commit": "280d9f2",
+  "unit_tests": 176,
+  "platforms_tested": [
+    "Windows AMD64",
+    "GitHub-hosted macOS 15 ARM64"
+  ],
+  "ci_run": "https://github.com/Marplino-Inc/project-organize-my-shit/actions/runs/38312382220",
+  "ci_conclusion": "success",
+  "checks": [
+    "architecture assertion arm64",
+    "setup and CLI discovery",
+    "data and security tests",
+    "UI history and Markdown",
+    "100 palette/mode combinations",
+    "Host/Origin/CSP controls",
+    "runtime dependency audit",
+    "extracted source ZIP setup, CLI CRUD and server startup"
+  ],
+  "not_verified": [
+    "physical M4 hardware",
+    "employer policy acceptance",
+    "independent penetration test",
+    "signed/notarized .app"
+  ]
+}

@@ -10,7 +10,7 @@ uvx pip-audit -r requirements.txt --no-deps --disable-pip --format json --output
 
 Result: no known vulnerabilities reported for the requirements applicable to the scanning Windows
 Python 3.12 environment. This is point-in-time evidence, not absence-of-vulnerabilities proof.
-macOS CI repeats an audit on its resolved environment. Dependency inventory includes package license
+macOS ARM64 CI repeated the runtime audit successfully; see validation.json and its linked CI run. Dependency inventory includes package license
 metadata; verify original distribution licenses if redistributing dependencies. The source release
 bundles no dependency binaries. The project has no general open-source LICENSE grant; use is being
 prepared for the repository owner's personal productivity purpose. Third-party licenses are unchanged.
