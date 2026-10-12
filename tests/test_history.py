@@ -58,35 +58,6 @@ def test_external_edits_preserved_or_conflict_atomically(workspace):
     assert len(history.state(path)) == 1
 
 
-def test_definitions_excluded_and_memberships_tags_reversible(workspace):
-    path, root = workspace
-    root = edit(
-        path, root, {"feature_definitions": {"ui": {"name": "UI"}}, "tag_defaults": {"release": None}}
-    )
-    assert history.state(path) == []
-    task = child(path, root)
-    edit(path, task, {"feature_ids": ["ui"], "tags": {"release": "1.2"}})
-    move(path, "undo")
-    assert get(path, task)["tags"] == {}
-    assert get(path, task)["feature_ids"] == []
-    move(path, "redo")
-    assert get(path, task)["feature_ids"] == ["ui"]
-    assert get(path, task)["tags"] == {"release": "1.2"}
-    edit(
-        path,
-        root,
-        {
-            "title": "Changed",
-            "feature_definitions": {"ui": {"name": "UI"}, "new": {"name": "New"}},
-            "tag_defaults": {"release": None, "new": None},
-        },
-    )
-    move(path, "undo")
-    assert "new" in get(path, root)["feature_definitions"]
-    assert "new" in get(path, root)["tag_defaults"]
-    assert get(path, root)["title"] == root["title"]
-
-
 def test_rename_with_new_children_and_stale_history(workspace):
     path, root = workspace
     root = edit(path, root, {"project_key": "NEW"})

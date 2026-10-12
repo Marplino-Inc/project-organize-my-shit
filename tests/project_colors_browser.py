@@ -1,7 +1,7 @@
 from playwright.sync_api import expect
 
 from organizer import store
-from tests.features_browser import ROOT, main
+from tests.browser_harness import ROOT, main
 from tests.test_store import child
 
 

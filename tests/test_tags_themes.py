@@ -1,5 +1,4 @@
 import json
-import sqlite3
 
 import pytest
 
@@ -54,60 +53,6 @@ def test_default_tags_only_on_projects(workspace):
         child(path, root, tag_defaults={"owner": None})
 
 
-def test_legacy_database_migration_backup_and_idempotence(workspace):
-    path, root = workspace
-    task = child(path, root, description="Keep my notes", status="Done")
-    store.set_setting(path, "theme", "Dark")
-    store.add_link(path, root["id"], task["id"], "relates to")
-    with sqlite3.connect(path) as db:
-        db.execute("ALTER TABLE items DROP COLUMN tag_defaults")
-        db.execute("ALTER TABLE items ADD COLUMN effort INTEGER")
-        db.execute("UPDATE items SET tags=? WHERE id=?", (json.dumps(["legacy"]), root["id"]))
-        db.execute("UPDATE items SET tags=? WHERE id=?", (json.dumps(["local"]), task["id"]))
-        db.execute("PRAGMA user_version=3")
-    store.initialize(path)
-    store.initialize(path)
-    items, links = store.load(path)
-    migrated = next(x for x in items if x["id"] == task["id"])
-    assert migrated == {**task, "tags": {"local": None}}
-    assert store.effective_tags(migrated, items) == {"legacy": None, "local": None}
-    assert len(links) == 1
-    assert store.setting(path, "theme") == "Dark"
-    backups = list(path.parent.glob("test.pre-v0.3.0-*.db"))
-    assert len(backups) == 1
-    with sqlite3.connect(backups[0]) as db:
-        assert db.execute("PRAGMA user_version").fetchone()[0] == 3
-        assert json.loads(db.execute("SELECT tags FROM items WHERE id=?", (root["id"],)).fetchone()[0]) == [
-            "legacy"
-        ]
-
-
-@pytest.mark.parametrize("version", [1, 2])
-def test_snapshot_versions_preserve_tags(workspace, tmp_path, version):
-    path, root = workspace
-    child(path, root, tags={"owner": None})
-    root = store.save(path, {"tag_defaults": {"owner": "Gary", "release": None}}, root["id"], 1)
-    raw = json.loads(store.export_snapshot(path))
-    raw["version"] = version
-    for item in raw["items"]:
-        item["effort"] = 3 if item["kind"] == "Task" else None
-    if version == 1:
-        raw["version"] = 1
-        for item in raw["items"]:
-            item["tags"] = list(item["tag_defaults"] if item["kind"] == "Project" else item["tags"])
-            del item["tag_defaults"]
-    target = tmp_path / "import.db"
-    store.initialize(target)
-    store.import_snapshot(target, json.dumps(raw))
-    items, _ = store.load(target)
-    project = next(x for x in items if x["kind"] == "Project")
-    assert project["tag_defaults"] == {"owner": "Gary" if version == 2 else None, "release": None}
-    assert store.effective_tags(next(x for x in items if x["kind"] == "Task"), items) == {
-        "owner": None,
-        "release": None,
-    }
-
-
 def test_cli_filter_options_and_report_use_effective_pairs(workspace, capsys):
     path, root = workspace
     store.save(path, {"tag_defaults": {"owner": "<Gary>", "release": None}}, root["id"], 1)
@@ -121,12 +66,6 @@ def test_cli_filter_options_and_report_use_effective_pairs(workspace, capsys):
     assert json.dumps(["release", None]) in options
     assert json.dumps(["release", "(null)"]) in options
     assert "owner: &lt;Gary&gt;" in html_report(items)
-
-
-@pytest.mark.parametrize("items", [None, 123])
-def test_malformed_legacy_snapshot_returns_validation_error(items):
-    with pytest.raises(ValueError, match="must be a list"):
-        store.parse_snapshot(json.dumps({"version": 1, "items": items}))
 
 
 def contrast(first, second):

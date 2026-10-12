@@ -1,0 +1,554 @@
+[
+  {
+    "name": "aiofiles",
+    "version": "25.1.0",
+    "license": "Apache-2.0",
+    "project_urls": [
+      "Changelog, https://github.com/Tinche/aiofiles#history",
+      "Bug Tracker, https://github.com/Tinche/aiofiles/issues",
+      "Repository, https://github.com/Tinche/aiofiles"
+    ]
+  },
+  {
+    "name": "aiohappyeyeballs",
+    "version": "2.7.1",
+    "license": "PSF-2.0",
+    "project_urls": [
+      "Bug Tracker, https://github.com/aio-libs/aiohappyeyeballs/issues",
+      "Changelog, https://github.com/aio-libs/aiohappyeyeballs/blob/main/CHANGELOG.md",
+      "Documentation, https://aiohappyeyeballs.readthedocs.io",
+      "Repository, https://github.com/aio-libs/aiohappyeyeballs"
+    ]
+  },
+  {
+    "name": "aiohttp",
+    "version": "3.14.4",
+    "license": "Apache-2.0 AND MIT",
+    "project_urls": [
+      "Homepage, https://github.com/aio-libs/aiohttp",
+      "Chat: Matrix, https://matrix.to/#/#aio-libs:matrix.org",
+      "Chat: Matrix Space, https://matrix.to/#/#aio-libs-space:matrix.org",
+      "CI: GitHub Actions, https://github.com/aio-libs/aiohttp/actions?query=workflow%3ACI",
+      "Coverage: codecov, https://codecov.io/github/aio-libs/aiohttp",
+      "Docs: Changelog, https://docs.aiohttp.org/en/stable/changes.html",
+      "Docs: RTD, https://docs.aiohttp.org",
+      "GitHub: issues, https://github.com/aio-libs/aiohttp/issues",
+      "GitHub: repo, https://github.com/aio-libs/aiohttp"
+    ]
+  },
+  {
+    "name": "aiosignal",
+    "version": "1.4.0",
+    "license": "Apache 2.0",
+    "project_urls": [
+      "Chat: Gitter, https://gitter.im/aio-libs/Lobby",
+      "CI: GitHub Actions, https://github.com/aio-libs/aiosignal/actions",
+      "Coverage: codecov, https://codecov.io/github/aio-libs/aiosignal",
+      "Docs: RTD, https://docs.aiosignal.org",
+      "GitHub: issues, https://github.com/aio-libs/aiosignal/issues",
+      "GitHub: repo, https://github.com/aio-libs/aiosignal"
+    ]
+  },
+  {
+    "name": "annotated-doc",
+    "version": "0.0.5",
+    "license": "MIT",
+    "project_urls": [
+      "Homepage, https://github.com/fastapi/annotated-doc",
+      "Documentation, https://github.com/fastapi/annotated-doc",
+      "Repository, https://github.com/fastapi/annotated-doc",
+      "Issues, https://github.com/fastapi/annotated-doc/issues",
+      "Changelog, https://github.com/fastapi/annotated-doc/release-notes.md"
+    ]
+  },
+  {
+    "name": "annotated-types",
+    "version": "0.8.0",
+    "license": "MIT",
+    "project_urls": [
+      "Homepage, https://github.com/annotated-types/annotated-types",
+      "Source, https://github.com/annotated-types/annotated-types",
+      "Changelog, https://github.com/annotated-types/annotated-types/releases"
+    ]
+  },
+  {
+    "name": "anyio",
+    "version": "4.15.1",
+    "license": "MIT",
+    "project_urls": [
+      "Documentation, https://anyio.readthedocs.io/en/latest/",
+      "Changelog, https://anyio.readthedocs.io/en/stable/versionhistory.html",
+      "Source code, https://github.com/agronholm/anyio",
+      "Issue tracker, https://github.com/agronholm/anyio/issues"
+    ]
+  },
+  {
+    "name": "attrs",
+    "version": "26.1.0",
+    "license": "MIT",
+    "project_urls": [
+      "Documentation, https://www.attrs.org/",
+      "Changelog, https://www.attrs.org/en/stable/changelog.html",
+      "GitHub, https://github.com/python-attrs/attrs",
+      "Funding, https://github.com/sponsors/hynek",
+      "Tidelift, https://tidelift.com/subscription/pkg/pypi-attrs?utm_source=pypi-attrs&utm_medium=pypi"
+    ]
+  },
+  {
+    "name": "bidict",
+    "version": "0.24.1",
+    "license": "MPL-2.0",
+    "project_urls": [
+      "Changelog, https://bidict.readthedocs.io/changelog.html",
+      "Documentation, https://bidict.readthedocs.io",
+      "Sponsor, https://bidict.readthedocs.io/#sponsoring",
+      "Repository, https://github.com/jab/bidict"
+    ]
+  },
+  {
+    "name": "certifi",
+    "version": "2026.7.22",
+    "license": "MPL-2.0",
+    "project_urls": [
+      "Source, https://github.com/certifi/python-certifi"
+    ]
+  },
+  {
+    "name": "click",
+    "version": "8.5.0",
+    "license": "BSD-3-Clause",
+    "project_urls": [
+      "Changes, https://click.palletsprojects.com/page/changes/",
+      "Chat, https://discord.gg/pallets",
+      "Documentation, https://click.palletsprojects.com/",
+      "Donate, https://palletsprojects.com/donate",
+      "Source, https://github.com/pallets/click/"
+    ]
+  },
+  {
+    "name": "docutils",
+    "version": "0.23",
+    "license": "License :: Public Domain; License :: OSI Approved :: BSD License; License :: OSI Approved :: GNU General Public License (GPL)",
+    "project_urls": [
+      "Changelog, https://docutils.sourceforge.io/HISTORY.html",
+      "Code, https://sourceforge.net/p/docutils/code/",
+      "Documentation, https://docutils.sourceforge.io/docs/",
+      "Download, https://pypi.org/project/docutils/",
+      "Homepage, https://docutils.sourceforge.io",
+      "Issue tracker, https://sourceforge.net/p/docutils/bugs/"
+    ]
+  },
+  {
+    "name": "fastapi",
+    "version": "0.142.2",
+    "license": "MIT",
+    "project_urls": [
+      "Homepage, https://github.com/fastapi/fastapi",
+      "Documentation, https://fastapi.tiangolo.com/",
+      "Repository, https://github.com/fastapi/fastapi",
+      "Issues, https://github.com/fastapi/fastapi/issues",
+      "Changelog, https://fastapi.tiangolo.com/release-notes/"
+    ]
+  },
+  {
+    "name": "frozenlist",
+    "version": "1.8.0",
+    "license": "Apache-2.0",
+    "project_urls": [
+      "Chat: Matrix, https://matrix.to/#/#aio-libs:matrix.org",
+      "Chat: Matrix Space, https://matrix.to/#/#aio-libs-space:matrix.org",
+      "CI: Github Actions, https://github.com/aio-libs/frozenlist/actions",
+      "Code of Conduct, https://github.com/aio-libs/.github/blob/master/CODE_OF_CONDUCT.md",
+      "Coverage: codecov, https://codecov.io/github/aio-libs/frozenlist",
+      "Docs: Changelog, https://github.com/aio-libs/frozenlist/blob/master/CHANGES.rst#changelog",
+      "Docs: RTD, https://frozenlist.aio-libs.org",
+      "GitHub: issues, https://github.com/aio-libs/frozenlist/issues",
+      "GitHub: repo, https://github.com/aio-libs/frozenlist"
+    ]
+  },
+  {
+    "name": "h11",
+    "version": "0.16.0",
+    "license": "MIT",
+    "project_urls": []
+  },
+  {
+    "name": "httpcore",
+    "version": "1.0.9",
+    "license": "BSD-3-Clause",
+    "project_urls": [
+      "Documentation, https://www.encode.io/httpcore",
+      "Homepage, https://www.encode.io/httpcore/",
+      "Source, https://github.com/encode/httpcore"
+    ]
+  },
+  {
+    "name": "httptools",
+    "version": "0.8.0",
+    "license": "MIT",
+    "project_urls": [
+      "Homepage, https://github.com/MagicStack/httptools"
+    ]
+  },
+  {
+    "name": "httpx",
+    "version": "0.28.1",
+    "license": "BSD-3-Clause",
+    "project_urls": [
+      "Changelog, https://github.com/encode/httpx/blob/master/CHANGELOG.md",
+      "Documentation, https://www.python-httpx.org",
+      "Homepage, https://github.com/encode/httpx",
+      "Source, https://github.com/encode/httpx"
+    ]
+  },
+  {
+    "name": "idna",
+    "version": "3.20",
+    "license": "BSD-3-Clause",
+    "project_urls": [
+      "Changelog, https://github.com/kjd/idna/blob/master/HISTORY.md",
+      "Issue tracker, https://github.com/kjd/idna/issues",
+      "Source, https://github.com/kjd/idna"
+    ]
+  },
+  {
+    "name": "ifaddr",
+    "version": "0.2.0",
+    "license": "MIT",
+    "project_urls": []
+  },
+  {
+    "name": "itsdangerous",
+    "version": "2.2.0",
+    "license": "License :: OSI Approved :: BSD License",
+    "project_urls": [
+      "Changes, https://itsdangerous.palletsprojects.com/changes/",
+      "Chat, https://discord.gg/pallets",
+      "Documentation, https://itsdangerous.palletsprojects.com/",
+      "Donate, https://palletsprojects.com/donate",
+      "Source, https://github.com/pallets/itsdangerous/"
+    ]
+  },
+  {
+    "name": "jinja2",
+    "version": "3.1.6",
+    "license": "License :: OSI Approved :: BSD License",
+    "project_urls": [
+      "Changes, https://jinja.palletsprojects.com/changes/",
+      "Chat, https://discord.gg/pallets",
+      "Documentation, https://jinja.palletsprojects.com/",
+      "Donate, https://palletsprojects.com/donate",
+      "Source, https://github.com/pallets/jinja/"
+    ]
+  },
+  {
+    "name": "markdown2",
+    "version": "2.5.5",
+    "license": "MIT",
+    "project_urls": []
+  },
+  {
+    "name": "markupsafe",
+    "version": "3.0.4",
+    "license": "BSD-3-Clause",
+    "project_urls": [
+      "Donate, https://palletsprojects.com/donate",
+      "Documentation, https://markupsafe.palletsprojects.com/",
+      "Changes, https://markupsafe.palletsprojects.com/page/changes/",
+      "Source, https://github.com/pallets/markupsafe/",
+      "Chat, https://discord.gg/pallets"
+    ]
+  },
+  {
+    "name": "multidict",
+    "version": "6.9.1",
+    "license": "Apache License 2.0",
+    "project_urls": [
+      "Chat: Matrix, https://matrix.to/#/#aio-libs:matrix.org",
+      "Chat: Matrix Space, https://matrix.to/#/#aio-libs-space:matrix.org",
+      "CI: GitHub, https://github.com/aio-libs/multidict/actions",
+      "Code of Conduct, https://github.com/aio-libs/.github/blob/master/CODE_OF_CONDUCT.md",
+      "Coverage: codecov, https://codecov.io/github/aio-libs/multidict",
+      "Docs: Changelog, https://multidict.aio-libs.org/en/latest/changes/",
+      "Docs: RTD, https://multidict.aio-libs.org",
+      "GitHub: issues, https://github.com/aio-libs/multidict/issues",
+      "GitHub: repo, https://github.com/aio-libs/multidict"
+    ]
+  },
+  {
+    "name": "nicegui",
+    "version": "3.17.1",
+    "license": "MIT",
+    "project_urls": [
+      "Changelog, https://github.com/zauberzeug/nicegui/releases",
+      "Documentation, https://nicegui.io/documentation",
+      "Funding, https://github.com/sponsors/zauberzeug",
+      "Homepage, https://nicegui.io",
+      "Issues, https://github.com/zauberzeug/nicegui/issues",
+      "Repository, https://github.com/zauberzeug/nicegui"
+    ]
+  },
+  {
+    "name": "opentelemetry-api",
+    "version": "1.45.0",
+    "license": "Apache-2.0",
+    "project_urls": [
+      "Homepage, https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-api",
+      "Repository, https://github.com/open-telemetry/opentelemetry-python"
+    ]
+  },
+  {
+    "name": "orjson",
+    "version": "3.12.0",
+    "license": "MPL-2.0 AND (Apache-2.0 OR MIT)",
+    "project_urls": [
+      "changelog, https://github.com/ijl/orjson/blob/master/CHANGELOG.md",
+      "documentation, https://github.com/ijl/orjson",
+      "source, https://github.com/ijl/orjson"
+    ]
+  },
+  {
+    "name": "propcache",
+    "version": "0.5.4",
+    "license": "Apache-2.0",
+    "project_urls": [
+      "Chat: Matrix, https://matrix.to/#/#aio-libs:matrix.org",
+      "Chat: Matrix Space, https://matrix.to/#/#aio-libs-space:matrix.org",
+      "CI: GitHub Workflows, https://github.com/aio-libs/propcache/actions?query=branch:master",
+      "Code of Conduct, https://github.com/aio-libs/.github/blob/master/CODE_OF_CONDUCT.md",
+      "Coverage: codecov, https://codecov.io/github/aio-libs/propcache",
+      "Docs: Changelog, https://propcache.readthedocs.io/en/latest/changes/",
+      "Docs: RTD, https://propcache.readthedocs.io",
+      "GitHub: issues, https://github.com/aio-libs/propcache/issues",
+      "GitHub: repo, https://github.com/aio-libs/propcache"
+    ]
+  },
+  {
+    "name": "pydantic",
+    "version": "2.13.5",
+    "license": "MIT",
+    "project_urls": [
+      "Homepage, https://github.com/pydantic/pydantic",
+      "Documentation, https://docs.pydantic.dev",
+      "Funding, https://github.com/sponsors/samuelcolvin",
+      "Source, https://github.com/pydantic/pydantic",
+      "Changelog, https://docs.pydantic.dev/latest/changelog/"
+    ]
+  },
+  {
+    "name": "pydantic-core",
+    "version": "2.46.5",
+    "license": "MIT",
+    "project_urls": [
+      "Funding, https://github.com/sponsors/samuelcolvin",
+      "Homepage, https://github.com/pydantic",
+      "Source, https://github.com/pydantic/pydantic/tree/main/pydantic-core"
+    ]
+  },
+  {
+    "name": "pygments",
+    "version": "2.21.0",
+    "license": "BSD-2-Clause",
+    "project_urls": [
+      "Homepage, https://pygments.org",
+      "Documentation, https://pygments.org/docs",
+      "Source, https://github.com/pygments/pygments",
+      "Bug Tracker, https://github.com/pygments/pygments/issues",
+      "Changelog, https://github.com/pygments/pygments/blob/master/CHANGES"
+    ]
+  },
+  {
+    "name": "python-dotenv",
+    "version": "1.2.4",
+    "license": "BSD-3-Clause",
+    "project_urls": [
+      "Source, https://github.com/theskumar/python-dotenv"
+    ]
+  },
+  {
+    "name": "python-engineio",
+    "version": "4.14.0",
+    "license": "MIT",
+    "project_urls": [
+      "homepage, https://code.miguelgrinberg.com/miguelgrinberg/python-engineio",
+      "documentation, https://python-engineio.readthedocs.io/",
+      "repository, https://code.miguelgrinberg.com/miguelgrinberg/python-engineio",
+      "issues, https://github.com/miguelgrinberg/python-engineio/issues",
+      "changelog, https://code.miguelgrinberg.com/miguelgrinberg/python-engineio/src/branch/main/CHANGES.md"
+    ]
+  },
+  {
+    "name": "python-multipart",
+    "version": "0.0.32",
+    "license": "Apache-2.0",
+    "project_urls": [
+      "Homepage, https://github.com/Kludex/python-multipart",
+      "Documentation, https://kludex.github.io/python-multipart/",
+      "Changelog, https://github.com/Kludex/python-multipart/blob/master/CHANGELOG.md",
+      "Source, https://github.com/Kludex/python-multipart"
+    ]
+  },
+  {
+    "name": "python-socketio",
+    "version": "5.17.0",
+    "license": "MIT",
+    "project_urls": [
+      "Homepage, https://code.miguelgrinberg.com/miguelgrinberg/python-socketio",
+      "Documentation, https://python-socketio.readthedocs.io/",
+      "Source Code, https://code.miguelgrinberg.com/miguelgrinberg/python-socketio",
+      "Issue Tracker, https://code.miguelgrinberg.com/miguelgrinberg/python-socketio/issues",
+      "Changelog, https://code.miguelgrinberg.com/miguelgrinberg/python-socketio/src/branch/main/CHANGES.md",
+      "Funding, https://code.miguelgrinberg.com/miguelgrinberg/python-socketio#sponsor-this-project"
+    ]
+  },
+  {
+    "name": "pyyaml",
+    "version": "6.0.3",
+    "license": "MIT",
+    "project_urls": [
+      "Bug Tracker, https://github.com/yaml/pyyaml/issues",
+      "CI, https://github.com/yaml/pyyaml/actions",
+      "Documentation, https://pyyaml.org/wiki/PyYAMLDocumentation",
+      "Mailing lists, http://lists.sourceforge.net/lists/listinfo/yaml-core",
+      "Source Code, https://github.com/yaml/pyyaml"
+    ]
+  },
+  {
+    "name": "simple-websocket",
+    "version": "1.1.0",
+    "license": "License :: OSI Approved :: MIT License",
+    "project_urls": [
+      "Homepage, https://github.com/miguelgrinberg/simple-websocket",
+      "Bug Tracker, https://github.com/miguelgrinberg/simple-websocket/issues"
+    ]
+  },
+  {
+    "name": "starlette",
+    "version": "1.7.0",
+    "license": "BSD-3-Clause",
+    "project_urls": [
+      "Homepage, https://github.com/Kludex/starlette",
+      "Documentation, https://starlette.dev/",
+      "Changelog, https://starlette.dev/release-notes/",
+      "Funding, https://github.com/sponsors/Kludex",
+      "Source, https://github.com/Kludex/starlette"
+    ]
+  },
+  {
+    "name": "tinycss2",
+    "version": "1.5.1",
+    "license": "License :: OSI Approved :: BSD License",
+    "project_urls": [
+      "Changelog, https://github.com/Kozea/tinycss2/releases",
+      "Code, https://github.com/Kozea/tinycss2/",
+      "Documentation, https://doc.courtbouillon.org/tinycss2/",
+      "Donation, https://opencollective.com/courtbouillon",
+      "Homepage, https://www.courtbouillon.org/tinycss2",
+      "Issues, https://github.com/Kozea/tinycss2/issues"
+    ]
+  },
+  {
+    "name": "typing-extensions",
+    "version": "4.16.0",
+    "license": "PSF-2.0",
+    "project_urls": [
+      "Bug Tracker, https://github.com/python/typing_extensions/issues",
+      "Changes, https://github.com/python/typing_extensions/blob/main/CHANGELOG.md",
+      "Documentation, https://typing-extensions.readthedocs.io/",
+      "Home, https://github.com/python/typing_extensions",
+      "Q & A, https://github.com/python/typing/discussions",
+      "Repository, https://github.com/python/typing_extensions"
+    ]
+  },
+  {
+    "name": "typing-inspection",
+    "version": "0.4.4",
+    "license": "MIT",
+    "project_urls": [
+      "Homepage, https://github.com/pydantic/typing-inspection",
+      "Documentation, https://pydantic.github.io/typing-inspection/dev/",
+      "Source, https://github.com/pydantic/typing-inspection",
+      "Changelog, https://github.com/pydantic/typing-inspection/blob/main/HISTORY.md"
+    ]
+  },
+  {
+    "name": "uvicorn",
+    "version": "0.54.0",
+    "license": "BSD-3-Clause",
+    "project_urls": [
+      "Changelog, https://uvicorn.dev/release-notes",
+      "Funding, https://github.com/sponsors/Kludex",
+      "Homepage, https://uvicorn.dev/",
+      "Source, https://github.com/Kludex/uvicorn"
+    ]
+  },
+  {
+    "name": "uvloop",
+    "version": "0.23.0",
+    "license": "Platform-specific; inspect target distribution"
+  },
+  {
+    "name": "watchfiles",
+    "version": "1.3.0",
+    "license": "MIT",
+    "project_urls": [
+      "Changelog, https://github.com/samuelcolvin/watchfiles/releases",
+      "Documentation, https://watchfiles.helpmanual.io",
+      "Funding, https://github.com/sponsors/samuelcolvin",
+      "Homepage, https://github.com/samuelcolvin/watchfiles",
+      "Source, https://github.com/samuelcolvin/watchfiles"
+    ]
+  },
+  {
+    "name": "webencodings",
+    "version": "0.6.1",
+    "license": "License :: OSI Approved :: BSD License",
+    "project_urls": [
+      "Changelog, https://github.com/CourtBouillon/webencodings/releases",
+      "Code, https://github.com/CourtBouillon/webencodings",
+      "Documentation, https://doc.courtbouillon.org/webencodings",
+      "Donation, https://opencollective.com/courtbouillon",
+      "Homepage, https://github.com/CourtBouillon/webencodings",
+      "Issues, https://github.com/CourtBouillon/webencodings/issues"
+    ]
+  },
+  {
+    "name": "websockets",
+    "version": "17.2",
+    "license": "BSD-3-Clause",
+    "project_urls": [
+      "Homepage, https://github.com/python-websockets/websockets",
+      "Changelog, https://websockets.readthedocs.io/en/stable/project/changelog.html",
+      "Documentation, https://websockets.readthedocs.io/",
+      "Funding, https://tidelift.com/subscription/pkg/pypi-websockets?utm_source=pypi-websockets&utm_medium=referral&utm_campaign=readme",
+      "Tracker, https://github.com/python-websockets/websockets/issues"
+    ]
+  },
+  {
+    "name": "wsproto",
+    "version": "1.3.2",
+    "license": "MIT",
+    "project_urls": [
+      "Homepage, https://github.com/python-hyper/wsproto/",
+      "Bug Reports, https://github.com/python-hyper/wsproto/issues",
+      "Source, https://github.com/python-hyper/wsproto/",
+      "Documentation, https://python-hyper.org/"
+    ]
+  },
+  {
+    "name": "yarl",
+    "version": "1.25.1",
+    "license": "Apache-2.0",
+    "project_urls": [
+      "Chat: Matrix, https://matrix.to/#/#aio-libs:matrix.org",
+      "Chat: Matrix Space, https://matrix.to/#/#aio-libs-space:matrix.org",
+      "CI: GitHub Workflows, https://github.com/aio-libs/yarl/actions?query=branch:master",
+      "Code of Conduct, https://github.com/aio-libs/.github/blob/master/CODE_OF_CONDUCT.md",
+      "Coverage: codecov, https://codecov.io/github/aio-libs/yarl",
+      "Docs: Changelog, https://yarl.aio-libs.org/en/latest/changes/",
+      "Docs: RTD, https://yarl.aio-libs.org",
+      "GitHub: issues, https://github.com/aio-libs/yarl/issues",
+      "GitHub: repo, https://github.com/aio-libs/yarl"
+    ]
+  }
+]

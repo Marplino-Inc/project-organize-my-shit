@@ -7,10 +7,11 @@ import webbrowser
 from pathlib import Path
 from urllib.request import urlopen
 
-from nicegui import app, ui
+from nicegui import app, core, ui
 
 from organizer.config import database_path
 from organizer.demo import seed
+from organizer.security import LocalBrowserBoundary
 from organizer.store import initialize
 from organizer.views import register
 
@@ -19,7 +20,7 @@ def main():
     parser = argparse.ArgumentParser(description="Sprig — a local project workspace")
     parser.add_argument("--demo", action="store_true", help="Use a separate sample workspace")
     parser.add_argument("--db", type=Path, help="Use a particular SQLite workspace")
-    parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--port", type=int, default=8775)
     parser.add_argument("--no-browser", action="store_true")
     args = parser.parse_args()
     if args.demo and args.db:
@@ -28,7 +29,7 @@ def main():
     url = f"http://127.0.0.1:{args.port}"
     version = tomllib.loads(Path(__file__).with_name("pyproject.toml").read_text())["project"]["version"]
     identity = {
-        "app": "organize",
+        "app": "sprig-work",
         "workspace": hashlib.sha256(str(path.resolve()).casefold().encode()).hexdigest(),
         "version": version,
     }
@@ -55,6 +56,8 @@ def main():
     def instance():
         return identity
 
+    app.add_middleware(LocalBrowserBoundary, port=args.port)
+    core.sio.eio.cors_allowed_origins = [url]
     initialize(path)
     if args.demo:
         seed(path)
@@ -62,11 +65,12 @@ def main():
     ui.run(
         host="127.0.0.1",
         port=args.port,
-        title="Sprig · Your project workspace",
+        title="Sprig Work · Your project workspace",
         favicon=Path(__file__).parent / "organizer" / "logo.svg",
         reload=False,
         show=not args.no_browser,
         dark=None,
+        on_air=False,
     )
 
 

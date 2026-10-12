@@ -1,248 +1,64 @@
-# Sprig
+# Sprig Work - v1.0.0-work
 
-![Sprig logo](organizer/logo.svg)
+Personal, single-user project/task tracking. Based on Sprig 1.2.0 at daf2b10, with work-item Features
+removed from UI, data model, CLI, sorting and reports. Other workflows remain: hierarchy, tags,
+Markdown, themes, symbols, sorting, five-step UI undo/redo, snapshots and local CLI.
 
-A local project workspace with colorful cards, nested goals, and a little room for ideas.
+## Apple Silicon Mac setup (including M4)
 
-Built with **Python, NiceGUI, and SQLite**. The interface runs in your browser at
-`http://127.0.0.1:8765`; the application and database stay on your computer.
-No account, cloud database, or remote service is required.
+Requires macOS 13+, employer-approved uv and initial internet access. Python 3.12 and locked packages
+are installed into a local virtualenv. This is a source package, not a signed/notarized .app.
+Extract into a local non-synced folder, then in Terminal:
 
-## Run on Windows
-
-For the release download, extract the Windows source ZIP and double-click **Start.cmd**.
-This starts the same local application as the PowerShell commands below; it requires uv.
-
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/), clone this repository,
-and run these PowerShell commands from the checkout:
-
-```powershell
-uv sync --locked --no-dev
-uv run --no-dev python main.py
+```sh
+cd "/path/to/sprig-work-1.0.0-work"
+sh Setup.command
+sh Start.command
 ```
 
-The browser opens automatically. Keep the terminal running; press **Ctrl+C** there to stop.
-The first installation requires internet access. Normal operation uses bundled local assets.
+Open http://127.0.0.1:8775. Keep the terminal open; Ctrl+C stops the app. Browser closure alone does not.
+Run `sh Start.command --demo --port 8776` for fictional sample data. No admin access or login service.
+After setup, launch/CLI use the existing virtualenv directly without dependency downloads.
+Data: `~/Library/Application Support/SprigWork/workspace.db`. Windows uses `%LOCALAPPDATA%/SprigWork`;
+Linux uses `$XDG_DATA_HOME/SprigWork` or `~/.local/share/SprigWork`. Personal data formats are rejected.
+Windows users may run Start.ps1; its setup uses uv. Work and personal instances use different ports.
 
-Or run `./Start.ps1`. For a separate sample workspace on port 8766, run `./Start.ps1 -Demo` or:
+## Agent handoff
 
-```powershell
-uv run --no-dev python main.py --demo --port 8766
+Open this package in VS Code with your approved Copilot account/model and read [AGENT_HANDOFF.md](AGENT_HANDOFF.md).
+The package includes repository instructions and a JSON CLI, without a model key, AI SDK or MCP server.
+
+```sh
+sh sprig-cli schema
+sh sprig-cli projects
+sh sprig-cli items --project APP
 ```
 
-Demo edits persist separately from your own projects. This is a source-based application,
-not a standalone executable or signed Windows installer. See the [v1.2.0 release notes](docs/releases/v1.2.0.md).
+[Work CLI contract](docs/work-agent-interface.md). Copilot may send command output/context to its model
+provider; local storage does not make AI inference local. Follow employer data policies and tool approvals.
 
-## Local updates and browser refresh
+## Security, sharing and maintenance
 
-After updated files are installed locally and the app is restarted, an open browser reconnects and
-refreshes automatically. A GitHub push alone does not update your local files; the app does not download
-updates itself. Save or close editors before updating. An open edited form triggers the browser's
-reload warning; choosing to stay keeps the text available to copy, but does not save a draft or restore
-the old server session. Saved projects remain in the separate local database.
+Read [SECURITY.md](SECURITY.md) and [release notes](docs/releases/v1.0.0-work.md).
+Reports/exports/backups are manual plaintext files. Full backups include activity and undo history.
+Protect files with OS permissions, FileVault and approved storage. No tamper-proof audit-log claim.
+The release contains no personal workspace, credentials, .venv or Git history.
 
-## What is included
+Main and work are active branches; shared improvements should reach both, except work-item Features.
+v1.0.0-work is a fixed release point. Analytics/mapping are deferred. [Maintenance rule](docs/branch-maintenance.md).
+Historical personal-edition documents in Git are background only; this README and work docs are current.
 
-- 50 palettes and style presets, each with light and dark appearance, remembered between launches.
-- Project colors and name/value tags, with compact cards and expandable details.
-- Projects → major goals → minor goals → tasks → subtasks, with optional skipped levels.
-- Ideas that do not count toward committed completion totals.
-- Stable IDs such as `APP-0001`, including an ID for the project itself.
-- Project stages: **Still a Dream, Just Designing, In Progress, On Hold, Completed, Cancelled**.
-- Separate task statuses: **Backlog, Ready, In progress, Done, Cancelled**.
-- A repository URL on each project. Repository links do not automatically synchronize GitHub issues.
-- One work board with project overviews and full/condensed cards.
-- Cross-project `blocks` and `relates to` links; unresolved blockers are visibly marked.
-- JSON snapshot exchange, standalone HTML reports, and full database backups.
-- A [JSON command-line interface for AI agents](docs/agent-interface.md), sharing all UI validation.
+## Validation
 
-Drag a card body, title or grip to move between status columns, or use its action menu.
-Clicking without dragging still opens its details.
-Within-column order is by stable ticket number; manual ordering is not saved.
-Click a card body or title to open centered details, edit fields, add children, or link related work.
-Empty lanes stay compact, with their message and Add item button just below the heading.
-**Condensed view** reduces the board to ticket-number/title rows and remembers your choice.
-Selecting a sidebar project replaces the aggregate summary with its description, status, repository,
-tags, goal count, active/blocked work and completion progress. **Home** or **My workspace** restores the overview.
-Use the menu button to collapse or expand the sidebar; the choice is remembered. Home and Preferences
-stay available in the toolbar, and the main panel fills the available browser width.
-
-Projects have an explicit lifecycle: finishing their tasks does **not** automatically mark them
-Completed. Completion totals count only the lowest-level committed work once, excluding ideas,
-cancelled items, and descendants of cancelled parents. An undivided goal counts as one work item.
-
-Project keys can be renamed in **Edit project**. Every work item receives the new prefix together;
-numbers, internal identities, relationships and history stay intact. Old ticket labels no longer resolve,
-so agents should refresh their item lists after a rename. Branch prefixes are not included.
-
-**Color by Feature** starts enabled. Cards with assigned Features keep their project band and add a
-front band split evenly among those Features. Unassigned cards show only the project band; turn the
-toggle off for project-only coloring everywhere. Full cards use the project band across the top;
-condensed cards keep it along the left with the Feature band alongside. Feature labels remain available.
-
-Both bands default to **5 px**. Adjust **Preferences > Card color band thickness** from 3-10 px;
-the width and coloring toggle persist after restart. Feature colors are generated from the project's
-catalog with separated hues and a tint from the active palette. Renaming a Feature preserves its color;
-changing the catalog can rebalance colors. Color is an aid, not a unique identifier.
-
-## Features
-
-Open **Edit project ? Features** to add feature names and optional descriptions. In a work item's
-editor, select zero, one or several **Features**. The same task appears under each selected feature;
-its status, identity and project completion count remain shared. Features do not change parents or
-create another hierarchy. Membership is explicit on each work item, without automatic child inheritance.
-
-Use the **Feature** dropdown above the board to narrow the work shown; choose **All work** to see everything. New items
-created while a feature is selected start with that feature selected. Full cards show feature badges;
-condensed cards stay ticket-number/title only, with memberships available in details. Renaming a feature
-preserves assignments. Unassign it from all work items, including cancelled ones, before removing it.
-
-Features travel with JSON snapshots, reports and agent updates. Upgrading from 0.3?0.5 creates a sibling
-`*.pre-v0.6.0-*.db` backup before adding empty feature fields. Database v6 requires this version of the app;
-use the backup with older code to roll back. Snapshot v4 imports versions 1?3, defaulting to no features.
-
-## Tags and themes
-
-Edit a project to define its **Project tag defaults**. Every default has a name and a value, or an
-explicit **Null** selection. Defaults appear on the project and every work item, including existing
-items. Work items can **Override** a default; turn Override off to follow the project again.
-Changing a project default updates all items that inherit it. Add extra item-specific pairs with
-**Add tag**. **Copy defaults from project → Copy set** reuses another project's set; later edits to
-the source set do not change the copy. Filters use the effective name/value pair.
-
-Use **Preferences → Theme palette**, a non-editable dropdown, to select from 50 families. The palette's
-source appears between the dropdown and the preview, which stays visible and updates in place.
-The toolbar has only **Light / Dark** appearance controls. Former System preferences start in Light.
-The original five palettes are joined by 19 authored tonal palettes. All assets remain local.
-
-Text fields and dropdowns use a slightly darker background than the canvas. Preferences includes a
-**Field border thickness** slider (1?4 px), applied immediately and remembered after restart.
-
-### Upgrading from 0.1.0 or 0.2.0
-
-Stop the old app before starting the updated version. On first use, the app creates a sibling
-`*.pre-v0.3.0-*.db` backup before migrating the database. Old project tags become null-valued project
-defaults; old work-item tags become null-valued local tags. Titles, IDs, descriptions, links, preferences,
-and activity are retained. Effort is removed from active storage and all interfaces; old values survive
-in the backup only. Do not open the migrated database with older code; use the pre-upgrade backup to
-roll back. New exports use snapshot version 5; versions 1-4 still import, discarding legacy effort.
-Agents must stop writing effort; see the [current agent contract](docs/agent-interface.md).
-
-### Startup troubleshooting
-
-Launching this version again with the same workspace and port opens the running app. A different
-workspace, older app or other program on that port produces a conflict message before database changes.
-Close the older app before upgrading; use `-Port 8767` for a separate workspace. Startup output is saved
-in `%LOCALAPPDATA%/ProjectOrganize/logs/startup-*.log`. On failure, the launcher prints the exit code and
-log location with the underlying error.
-
-## Local data and sharing
-
-On Windows, your data lives outside the repository:
-
-```text
-%LOCALAPPDATA%/ProjectOrganize/workspace.db
-%LOCALAPPDATA%/ProjectOrganize/demo.db
-```
-
-Use `--db "C:/path/to/workspace.db"` to open another workspace. The public source repository does
-not contain your working database. The server binds only to `127.0.0.1` and has no network sharing mode.
-
-**Share → Export project snapshot** exports the selected project, or the whole workspace when no
-project is selected. Snapshots include descriptions, tags, statuses, and repository URLs.
-Relationships to excluded projects are omitted and counted; export the whole workspace to retain
-cross-project relationships. Import previews the file, validates it, and creates separate projects.
-It never overwrites an existing key. For a single-project snapshot, supply a new key to import a copy.
-This is snapshot exchange, not concurrent synchronization.
-
-**Share → Download read-only report** produces a standalone, script-free HTML file that opens offline.
-Use your browser's Print command to save it as PDF.
-
-**Preferences → Download workspace backup** makes a consistent SQLite backup of all records,
-preferences, and activity. To restore, stop the app, keep a copy of the backup, and run:
-
-```powershell
-uv run --no-dev python main.py --db "C:/Backups/organize-backup.db"
-```
-
-The selected backup becomes the working database. Project snapshots omit local preferences and activity;
-use a database backup when you need the entire workspace.
-
-## Development
-
-See [product scope](docs/product-scope.md) for the focused project/task workflow and small-update cadence.
-
-```powershell
+```sh
 uv sync --locked
 uv run pytest -q
 uv run ruff check .
 uv run playwright install chromium
-uv run python -m tests.browser_smoke
+uv run python -m tests.work_browser
+uv run python -m tests.history_browser
+uv run python -m tests.project_overview_browser
 ```
 
-The browser checks use a temporary database and write screenshots to ignored `artifacts/`.
-See [development status](docs/development-status.md) for validation and known limits,
-and [design decisions](docs/design.md) for the UI and data model.
-
-## Sprig name and compatibility
-
-Sprig is the new product name as of 0.7.0. The card-and-leaf logo is an original local SVG using the
-active theme colors; no external image/font service is needed. The existing repository/check-out name,
-`organizer` CLI module, `organize-snapshot` format and `%LOCALAPPDATA%/ProjectOrganize` storage location
-remain compatible. Existing data opens in place; renaming the product does not rename your projects.
-
-The 1.0.1 palette additions include GGplot Gray Pastel, all 16 shinythemes families, Apple HIG,
-Microsoft Fluent and IBM Carbon. These are local color adaptations, each with Light/Dark variants,
-not full framework skins. See [palette sources and adaptation decisions](docs/theme-sources.md).
-
-
-Game-inspired presets: **Persona 5**, **Destiny 2**, **Alien: Isolation**, **The Division**, **Halo**,
-and **World of Warcraft** change typography, framing and surfaces as well as colors. Each has Light
-and Dark modes. Select them in Preferences; your existing default stays selected until you choose.
-See [game-style decisions](docs/game-themes.md).
-
-Use **Sort by** above the board for Ticket number (project key then numeric sequence), Title (A-Z),
-Feature (first alphabetical assigned name, unassigned last), or Recently updated (newest first).
-Sorting applies within each lane and is remembered. Feature ties use title, then ticket number;
-other ties use ticket number. Clearing filters keeps your sort choice. Dragging changes a card's
-lane/status; the destination lane still follows the selected sort instead of storing manual order.
-
-Project color now offers twelve named choices with swatches in the project editor. Rose, Orange,
-Lime, Cyan, Indigo, Pink and Slate keep their hues across themes; the original five remain theme-adapted.
-Snapshots using new colors require Sprig 1.1.0 or later to import. No database migration is needed.
-
-
-### Project descriptions and symbols (1.2.0)
-
-Write Markdown in **Edit project > Description**: `## Heading` makes a heading, and `- Item`
-makes a bullet. The overview renders it and expands to fit, pushing the board down.
-Turn on **Preferences > Project Description Scrollable** for the former compact scrolling box.
-In **Edit project > Project symbol**, choose from ten shapes/icons; the symbol uses the project
-color beside its name in the sidebar, overview and workspace cards.
-
-Stop the previous app before starting 1.2.0. The schema-7 upgrade creates a pre-upgrade backup
-of existing databases; a schema-6 database gets `*.pre-v1.2.0-*.db`. Use that backup with old code
-if rolling back. Snapshot format 5 requires 1.2.0+, while imports still accept formats 1-4.
-
-
-### Undo and redo (1.2.0)
-
-Use **Undo and redo** beside **Refresh workspace**. Redo is on the left, the current workspace is
-in the middle, and Undo is on the right. The nearest card on either side is actionable; older steps
-become available in order. Up to five UI edits persist across refreshes and restarts. A new undoable
-edit after undo clears the redo branch.
-
-History covers edits to existing projects/work items, lane moves, Feature memberships and local tag
-assignments. Creating projects/items, defining new Features/project default tag names, agent/CLI edits,
-filters, display switches, palettes and refreshes are excluded. New definitions survive undo even when
-saved alongside an eligible edit. There is no separate global tag catalog; adding a local name/value
-pair to a work item is treated as a tag assignment.
-
-Undo applies only the recorded fields, preserving unrelated later work. A conflicting outside edit or
-an invalid hierarchy blocks the action without partial changes. Project-key undo/redo also renames
-newly created descendants. Activity records the action and revisions increase. History belongs to the
-local workspace (shared across its browser windows), is included in full database backups, and is not
-part of exchanged snapshots. It is not a full-workspace restore.
-
-Work-item descriptions support Markdown. **Preferences > Work Item Description Scrollable** toggles
-an inner scrolling box; by default the description expands within the details window.
+Pinned runtime packages/hashes are in requirements.txt; full resolution is in uv.lock. Inventory and
+security scan evidence are in docs/security. See release notes for actual platform evidence and limits.

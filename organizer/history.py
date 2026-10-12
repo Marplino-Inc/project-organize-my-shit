@@ -6,7 +6,7 @@ from uuid import uuid4
 
 KEY = "_ui_edit_history"
 LIMIT = 5
-MAP_FIELDS = {"tags", "tag_defaults", "feature_definitions"}
+MAP_FIELDS = {"tags", "tag_defaults"}
 IGNORED = {"id", "number", "created_at", "updated_at", "revision"}
 
 
@@ -26,8 +26,8 @@ def record(db, before, after, actor):
             continue
         if field in MAP_FIELDS:
             for key in sorted(before[field].keys() | after[field].keys()):
-                # Defining new project tags/features is outside edit history.
-                if key not in before[field] and field in {"tag_defaults", "feature_definitions"}:
+                # Defining new project tags is outside edit history.
+                if key not in before[field] and field in {"tag_defaults"}:
                     continue
                 old = [key in before[field], before[field].get(key)]
                 new = [key in after[field], after[field].get(key)]

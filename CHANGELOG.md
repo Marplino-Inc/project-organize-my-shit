@@ -1,3 +1,7 @@
+# Work edition
+
+See docs/releases/v1.0.0-work.md for the current release.
+
 # Changelog
 
 ## 1.2.0 - Descriptions, project symbols and edit history

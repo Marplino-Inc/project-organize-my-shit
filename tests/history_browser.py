@@ -1,7 +1,7 @@
 from playwright.sync_api import expect
 
 from organizer import history, store
-from tests.features_browser import ROOT, main
+from tests.browser_harness import ROOT, main
 from tests.test_store import child
 
 
@@ -44,6 +44,7 @@ def check(page, db):
         page.get_by_text("This field changed outside UI history. No changes were applied.", exact=True)
     ).to_be_visible()
     page.get_by_role("button", name="Close history", exact=True).click()
+    expect(page.locator(".ticket-card")).to_contain_text("Agent edit", timeout=10000)
     page.locator(".ticket-card .drag-handle").drag_to(page.locator('[data-status="In progress"]'))
     expect(page.locator('[data-status="In progress"] .ticket-card')).to_have_count(1)
     page.get_by_role("button", name="Undo and redo", exact=True).click()

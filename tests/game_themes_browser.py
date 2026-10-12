@@ -7,8 +7,8 @@ from playwright.sync_api import expect
 from organizer import store
 from organizer.demo import seed
 from organizer.game_themes import GAME_THEMES
+from tests.browser_harness import ROOT, main
 from tests.browser_smoke import check_card_contrast, check_field_contrast
-from tests.features_browser import ROOT, main
 
 
 def check(page, db):

@@ -1,6 +1,6 @@
 [project]
-name = "project-organize-my-shit"
-version = "1.2.0"
+name = "sprig-work"
+version = "1.0.0+work"
 description = "Sprig: a colorful, local project workspace with cards, projects, and tasks."
 requires-python = ">=3.12,<3.14"
 dependencies = ["nicegui>=3.17.1,<4"]

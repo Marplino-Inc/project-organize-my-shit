@@ -1,0 +1,35 @@
+name: Work edition Apple Silicon
+on:
+  push:
+    branches: [work]
+    paths: ["organizer/**", "main.py", "tests/**", "uv.lock", "*.command", "sprig-cli", ".github/workflows/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  macos:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9
+        with:
+          version: "0.12.12"
+          enable-cache: false
+      - name: Verify architecture and launchers
+        run: |
+          test "$(uname -m)" = arm64
+          sh -n Setup.command Start.command sprig-cli
+          sh Setup.command
+          sh sprig-cli schema
+      - name: Test
+        run: |
+          uv sync --locked
+          uv run pytest -q
+          uv run playwright install chromium
+          uv run python -m tests.history_browser
+          uv run python -m tests.project_overview_browser
+          uv run python -m tests.work_browser
+
+      - name: Runtime dependency audit
+        run: uvx pip-audit -r requirements.txt --no-deps --disable-pip
