@@ -223,3 +223,26 @@ color beside its name in the sidebar, overview and workspace cards.
 Stop the previous app before starting 1.2.0. The schema-7 upgrade creates a pre-upgrade backup
 of existing databases; a schema-6 database gets `*.pre-v1.2.0-*.db`. Use that backup with old code
 if rolling back. Snapshot format 5 requires 1.2.0+, while imports still accept formats 1-4.
+
+
+### Undo and redo (1.2.0)
+
+Use **Undo and redo** beside **Refresh workspace**. Redo is on the left, the current workspace is
+in the middle, and Undo is on the right. The nearest card on either side is actionable; older steps
+become available in order. Up to five UI edits persist across refreshes and restarts. A new undoable
+edit after undo clears the redo branch.
+
+History covers edits to existing projects/work items, lane moves, Feature memberships and local tag
+assignments. Creating projects/items, defining new Features/project default tag names, agent/CLI edits,
+filters, display switches, palettes and refreshes are excluded. New definitions survive undo even when
+saved alongside an eligible edit. There is no separate global tag catalog; adding a local name/value
+pair to a work item is treated as a tag assignment.
+
+Undo applies only the recorded fields, preserving unrelated later work. A conflicting outside edit or
+an invalid hierarchy blocks the action without partial changes. Project-key undo/redo also renames
+newly created descendants. Activity records the action and revisions increase. History belongs to the
+local workspace (shared across its browser windows), is included in full database backups, and is not
+part of exchanged snapshots. It is not a full-workspace restore.
+
+Work-item descriptions support Markdown. **Preferences > Work Item Description Scrollable** toggles
+an inner scrolling box; by default the description expands within the details window.

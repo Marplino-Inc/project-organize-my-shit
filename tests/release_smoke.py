@@ -204,7 +204,7 @@ def main():
                     ).to_be_visible()
                     expect(page.locator("body")).to_have_class(re.compile(r"\bbody--dark\b"))
                     expect(page.get_by_label("Sort by", exact=True)).to_have_value("Title")
-                    assert "Georgia" in page.locator(".hero h1").evaluate(
+                    assert "Georgia" in page.locator(".section-title h2").first.evaluate(
                         "e => getComputedStyle(e).fontFamily"
                     )
                     assert db.exists()

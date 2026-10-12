@@ -194,3 +194,12 @@ Work items retain the default `circle` field; custom symbols are project-only.
 Database schema 7 adds the symbol column. Upgrading a schema-6 workspace first creates a sibling
 `*.pre-v1.2.0-*.db` backup. Snapshot format 5 includes symbols; formats 1-4 still import with circles
 when the symbol is absent. New exports require Sprig 1.2.0+; older apps cannot open the upgraded database.
+
+
+## UI edit history
+
+The five-step undo/redo history records only explicit UI edits. CLI writes do not enter that history.
+Undo/redo compares the affected fields with their expected values, preserves unrelated fields, validates
+the resulting graph, and increments revisions with an activity entry. A conflict leaves data unchanged.
+Agents must still fetch the latest revision before editing. History lives in the local settings table
+and full database backups, not snapshots; the CLI contract and snapshot format are unchanged.

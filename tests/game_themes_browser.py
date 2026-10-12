@@ -61,7 +61,7 @@ def check(page, db):
     page.get_by_role("switch", name="Condensed view", exact=True).click()
     expect(page.locator(".condensed-card")).to_have_count(0)
     assert page.locator(".ticket-card").first.evaluate("e => getComputedStyle(e).borderRadius") == "10px"
-    assert page.locator(".hero").evaluate("e => getComputedStyle(e).borderTopWidth") == "0px"
+    assert page.locator(".hero").count() == 0
     assert "Segoe UI" in page.locator("body").evaluate("e => getComputedStyle(e).fontFamily")
 
 

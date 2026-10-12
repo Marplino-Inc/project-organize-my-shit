@@ -6,7 +6,7 @@ from pathlib import Path
 
 from nicegui import ui
 
-from . import store, themes
+from . import history, store, themes
 from .board_order import SORT_OPTIONS, ordered_items
 from .feature_editor import feature_editor
 from .reports import html_report
@@ -205,7 +205,7 @@ def register(path, demo=False):
 
         def update_status(item, status):
             try:
-                store.save(path, {"status": status}, item["id"], item["revision"])
+                store.save(path, {"status": status}, item["id"], item["revision"], record_history=True)
                 ui.notify(f"{store.ticket(item)} → {status}", type="positive")
             except ValueError as error:
                 ui.notify(str(error), type="negative")
@@ -471,7 +471,11 @@ def register(path, demo=False):
                         )
                     try:
                         saved = store.save(
-                            path, fields, item["id"] if item else None, item["revision"] if item else None
+                            path,
+                            fields,
+                            item["id"] if item else None,
+                            item["revision"] if item else None,
+                            record_history=True,
                         )
                     except ValueError as error:
                         error_label.text = str(error)
@@ -522,7 +526,14 @@ def register(path, demo=False):
                 if item["kind"] == "Project":
                     ui.markdown(item["description"] or "No description yet.").classes("project-description")
                 else:
-                    ui.label(item["description"] or "No description yet.").classes("detail-description")
+                    ui.markdown(item["description"] or "No description yet.").classes(
+                        "project-description work-description"
+                        + (
+                            " scrollable"
+                            if store.setting(path, "work_description_scrollable", "false") == "true"
+                            else ""
+                        )
+                    )
 
                 def edit():
                     dialog.close()
@@ -547,9 +558,9 @@ def register(path, demo=False):
                             dialog.close()
                             detail(child)
 
-                        ui.button(f"{store.ticket(child)} · {child['title']}", on_click=open_child).props(
-                            "flat no-caps"
-                        ).classes("w-full justify-start")
+                        with ui.button(on_click=open_child).props("flat no-caps").classes("child-row w-full"):
+                            ui.label(f"{store.ticket(child)} - {child['title']}").classes("child-title")
+                            ui.label(child["status"]).classes("tag child-status")
                 ui.separator()
                 ui.label("Relationships").classes("eyebrow")
                 related = [x for x in links if item["id"] in (x["source"], x["target"])]
@@ -705,6 +716,78 @@ def register(path, demo=False):
                     import_button.disable()
             dialog.open()
 
+        def history_dialog():
+            with client.layout, ui.dialog() as dialog, ui.card().classes("dialog-card history-dialog"):
+                with ui.row().classes("w-full items-center justify-between"):
+                    ui.label("Workspace history").classes("dialog-heading")
+                    ui.button(icon="close", on_click=dialog.close).props(
+                        "flat round dense aria-label='Close history'"
+                    )
+                ui.label(
+                    "Last five UI edits. New items, definitions and preferences stay outside history."
+                ).classes("form-hint")
+                message = ui.label().classes("text-negative")
+
+                def move(direction, entry_id):
+                    try:
+                        history.apply(path, direction, entry_id)
+                    except ValueError as error:
+                        message.text = str(error)
+                        timeline.refresh()
+                        return
+                    message.text = ""
+                    refresh()
+                    timeline.refresh()
+
+                @ui.refreshable
+                def timeline():
+                    entries = history.state(path)
+                    undo = [entry for entry in entries if entry["applied"]]
+                    redo = [entry for entry in entries if not entry["applied"]]
+                    with ui.element("div").classes("history-grid"):
+                        for direction, changes in (
+                            ("redo", redo),
+                            ("current", []),
+                            ("undo", list(reversed(undo))),
+                        ):
+                            with ui.column().classes("history-column"):
+                                ui.label(
+                                    "Current workspace" if direction == "current" else direction.capitalize()
+                                ).classes("eyebrow")
+                                if direction == "current":
+                                    with ui.card().classes("history-state"):
+                                        ui.icon("account_tree", size="28px")
+                                        ui.label("You are here")
+                                        ui.label(
+                                            f"{len(undo)} applied / {len(redo)} available to redo"
+                                        ).classes("text-xs muted")
+                                elif not changes:
+                                    ui.label(f"Nothing to {direction}.").classes("muted text-sm")
+                                else:
+                                    for index, entry in enumerate(changes):
+                                        with ui.card().classes("history-state"):
+                                            ui.label(entry["ticket"] + " - " + entry["title"]).classes(
+                                                "history-title"
+                                            )
+                                            ui.label(history.summary(entry)).classes(
+                                                "history-summary"
+                                            ).tooltip(history.summary(entry))
+                                            if index == 0:
+                                                ui.button(
+                                                    direction.capitalize(),
+                                                    icon=direction,
+                                                    on_click=lambda d=direction, key=entry["id"]: move(
+                                                        d, key
+                                                    ),
+                                                ).props("dense flat")
+                                            else:
+                                                ui.label("Available after the step above").classes(
+                                                    "text-xs muted"
+                                                )
+
+                timeline()
+            dialog.open()
+
         def settings_dialog():
             with client.layout, ui.dialog() as dialog, ui.card().classes("dialog-card"):
                 ui.label("Workspace preferences").classes("dialog-heading")
@@ -801,6 +884,17 @@ def register(path, demo=False):
                 ui.label(
                     "Off by default: the full description expands the page. On: scroll within a compact box."
                 ).classes("form-hint")
+                ui.separator()
+                ui.switch(
+                    "Work Item Description Scrollable",
+                    value=store.setting(path, "work_description_scrollable", "false") == "true",
+                    on_change=lambda event: store.set_setting(
+                        path, "work_description_scrollable", str(bool(event.value)).lower()
+                    ),
+                )
+                ui.label("Off by default: work item descriptions expand inside the details window.").classes(
+                    "form-hint"
+                )
                 ui.separator()
                 ui.label("Backup").classes("eyebrow")
                 ui.label(
@@ -1051,6 +1145,9 @@ def register(path, demo=False):
                     ui.button(icon="refresh", on_click=refresh).props(
                         "flat round dense aria-label='Refresh workspace'"
                     ).tooltip("Refresh workspace")
+                    ui.button(icon="history", on_click=history_dialog).props(
+                        "flat round dense aria-label='Undo and redo'"
+                    ).tooltip("Undo and redo")
                     ui.button("Share", icon="ios_share", on_click=sharing).props("flat").classes(
                         "secondary-button"
                     )
@@ -1115,22 +1212,6 @@ def register(path, demo=False):
                         f"{round(100 * done / total)}% complete" if total else "No planned work yet"
                     ).classes("text-xs muted")
             else:
-                with ui.element("div").classes("hero"):
-                    with ui.element("div"):
-                        ui.html(
-                            "<h1>"
-                            + ("Your ideas. Taking shape." if not selected else "Your project, in focus.")
-                            + "</h1>"
-                        )
-                        ui.label(
-                            selected["title"]
-                            if selected
-                            else "A little structure. More room to make things happen."
-                        ).classes("muted text-sm")
-                        if selected and selected["repository_url"]:
-                            ui.link("Open repository ↗", selected["repository_url"], new_tab=True).classes(
-                                "repo-link"
-                            ).props("rel=noopener")
                 scope = selected_items()
                 leaves = store.active_leaves(scope)
                 done, total = store.progress(scope)

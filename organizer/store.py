@@ -395,7 +395,7 @@ def write_item(db, item):
     db.execute(f"INSERT INTO items ({columns}) VALUES ({markers})", tuple(row.values()))
 
 
-def save(path, fields, item_id=None, revision=None, actor="You"):
+def save(path, fields, item_id=None, revision=None, actor="You", *, record_history=False):
     editable = {
         "project_key",
         "parent_id",
@@ -497,6 +497,10 @@ def save(path, fields, item_id=None, revision=None, actor="You"):
             "INSERT INTO activity(item_id, actor, action, timestamp, fields) VALUES (?, ?, ?, ?, ?)",
             (item["id"], actor, "updated" if existing else "created", stamp, json.dumps(changed)),
         )
+        if existing and record_history:
+            from .history import record
+
+            record(db, existing, item, actor)
         return item
 
 

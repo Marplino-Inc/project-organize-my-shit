@@ -1,6 +1,18 @@
 # Development status
 
-## v1.2.0 - Markdown and project symbols
+## v1.2.0 - Markdown, symbols and UI edit history
+
+October 12 follow-up stays in 1.2.0 at the user's request. Five persisted UI edit steps use
+field-level patches with conflict checks, graph validation, atomic updates and activity. No new
+schema or CLI version is needed; history uses a reserved workspace setting. Creation and agent edits
+are excluded. Markdown work-item details, an independent scrolling preference, left/right child
+alignment and home-slogan removal are implemented. Focused browser checks passed for history layout,
+undo/redo, reload persistence, agent conflicts, Markdown, scrolling and child alignment. History unit
+tests cover the five-step cap, redo invalidation, no-ops, exclusions, mixed edits, project-key changes
+with new descendants and invalid hierarchy rollback. All 186 pytest checks and Ruff passed. The full browser workflow also passed all 100 palette/mode
+combinations, CRUD, drag/menu status, agent refresh, exports and narrow/wide layouts. These are isolated automated checks, not user
+acceptance.
+
 
 - Render project descriptions as sanitized Markdown while retaining editable Markdown source.
 - Expand the project overview description by default; add persistent Project Description Scrollable preference.

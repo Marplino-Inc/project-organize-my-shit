@@ -1,6 +1,15 @@
 # Changelog
 
-## 1.2.0 - Project descriptions and symbols
+## 1.2.0 - Descriptions, project symbols and edit history
+
+- Add a persistent five-step UI-only undo/redo window beside Refresh workspace, with Redo left,
+  current state center and Undo right. Empty sides show a short note.
+- Exclude creations, new Feature/tag definitions, agent edits, filters and preferences. Reverse only
+  edited fields; refuse conflicts or invalid relationships atomically. Undo/redo increments revisions.
+- Remove the home-page slogan and subtitle. Render work-item descriptions as sanitized Markdown and
+  add an independent Work Item Description Scrollable preference, off by default.
+- Align child titles left and statuses right in project/work-item details.
+
 
 - Render project descriptions as sanitized Markdown while retaining editable Markdown source.
 - Expand the project overview description by default; add persistent Project Description Scrollable preference.
